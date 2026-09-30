@@ -2346,8 +2346,14 @@ function getInviteLink(){
     }
 
 
+    /* IMPORTANT:
+       startapp is used so Telegram
+       passes the referral value to
+       the Mini App as start_param.
+    */
+
     return (
-        "https://t.me/koko_mini_bot?start=ref_" +
+        "https://t.me/koko_mini_bot?startapp=ref_" +
         userId
     );
 
