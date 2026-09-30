@@ -8,6 +8,9 @@
 
 <title>Koko Memory Match</title>
 
+<!-- Telegram Web App SDK -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <!-- Monetag Rewarded Interstitial SDK -->
 <script
     src="//libtl.com/sdk.js"
@@ -1422,126 +1425,57 @@ h1{
 <script>
 "use strict";
 
+/* Telegram WebApp Initialization */
+try {
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+    }
+} catch (e) {
+    console.log("Telegram init error", e);
+}
+
 
 /* =========================================================
    PAGE NAVIGATION
 ========================================================= */
 
 const pages = {
-
-    home:
-        document.getElementById("homePage"),
-
-    task:
-        document.getElementById("taskPage"),
-
-    invite:
-        document.getElementById("invitePage"),
-
-    ads:
-        document.getElementById("adsPage"),
-
-    wallet:
-        document.getElementById("walletPage")
-
+    home: document.getElementById("homePage"),
+    task: document.getElementById("taskPage"),
+    invite: document.getElementById("invitePage"),
+    ads: document.getElementById("adsPage"),
+    wallet: document.getElementById("walletPage")
 };
 
-
-const navButtons =
-    document.querySelectorAll(".nav-btn");
-
-
-const homeMainCard =
-    document.getElementById(
-        "homeMainCard"
-    );
-
-
-const homeGameScreen =
-    document.getElementById(
-        "homeGameScreen"
-    );
-
-
-/* =========================================================
-   PAGE SWITCH
-========================================================= */
+const navButtons = document.querySelectorAll(".nav-btn");
+const homeMainCard = document.getElementById("homeMainCard");
+const homeGameScreen = document.getElementById("homeGameScreen");
 
 function showPage(pageName){
-
-    Object.keys(pages).forEach(
-        function(key){
-
-            pages[key].classList.add(
-                "hidden"
-            );
-
-        }
-    );
-
+    Object.keys(pages).forEach(function(key){
+        pages[key].classList.add("hidden");
+    });
 
     if(pages[pageName]){
-
-        pages[pageName].classList.remove(
-            "hidden"
-        );
-
+        pages[pageName].classList.remove("hidden");
     }
-
-
-    /*
-       Home ছাড়া অন্য page হলে
-       Home-এর Game Screen বন্ধ হবে।
-    */
 
     if(pageName !== "home"){
-
-        homeGameScreen.classList.add(
-            "hidden"
-        );
-
-        homeMainCard.classList.remove(
-            "hidden"
-        );
-
+        homeGameScreen.classList.add("hidden");
+        homeMainCard.classList.remove("hidden");
     }
 
-
-    /*
-       Navigation Active State
-    */
-
-    navButtons.forEach(
-        function(button){
-
-            button.classList.remove(
-                "active"
-            );
-
-
-            if(
-                button.dataset.page ===
-                pageName
-            ){
-
-                button.classList.add(
-                    "active"
-                );
-
-            }
-
+    navButtons.forEach(function(button){
+        button.classList.remove("active");
+        if(button.dataset.page === pageName){
+            button.classList.add("active");
         }
-    );
-
+    });
 
     updateExtraUI();
-
-
-    window.scrollTo(
-        0,
-        0
-    );
-
+    window.scrollTo(0, 0);
 }
 
 
@@ -1549,144 +1483,50 @@ function showPage(pageName){
    NORMAL NAVIGATION BUTTONS
 ========================================================= */
 
-navButtons.forEach(
-    function(button){
-
-        button.addEventListener(
-            "click",
-            function(){
-
-                showPage(
-                    button.dataset.page
-                );
-
-            }
-        );
-
-    }
-);
+navButtons.forEach(function(button){
+    button.addEventListener("click", function(e){
+        e.preventDefault();
+        showPage(button.dataset.page);
+    });
+});
 
 
 /* =========================================================
    HOME → MATCHING GAME
 ========================================================= */
 
-const goTaskBtn =
-    document.getElementById(
-        "goTaskBtn"
-    );
+const goTaskBtn = document.getElementById("goTaskBtn");
+const gameBackBtn = document.getElementById("gameBackBtn");
 
+goTaskBtn.addEventListener("click", function(e){
+    e.preventDefault();
 
-const gameBackBtn =
-    document.getElementById(
-        "gameBackBtn"
-    );
+    homeMainCard.classList.add("hidden");
+    homeGameScreen.classList.remove("hidden");
 
+    navButtons.forEach(function(button){
+        button.classList.remove("active");
+        if(button.dataset.page === "home"){
+            button.classList.add("active");
+        }
+    });
 
-goTaskBtn.addEventListener(
-    "click",
-    function(){
-
-        /*
-           IMPORTANT:
-
-           Game Home page-এর ভিতরেই খুলবে।
-           Task page-এ যাবে না।
-        */
-
-        showPage("home");
-
-
-        /*
-           Home-এর মূল Card hide
-        */
-
-        homeMainCard.classList.add(
-            "hidden"
-        );
-
-
-        /*
-           Matching Game show
-        */
-
-        homeGameScreen.classList.remove(
-            "hidden"
-        );
-
-
-        /*
-           FORCE HOME ACTIVE
-
-           Game খোলা অবস্থায়ও
-           নিচের Home button active থাকবে।
-        */
-
-        navButtons.forEach(
-            function(button){
-
-                button.classList.remove(
-                    "active"
-                );
-
-
-                if(
-                    button.dataset.page ===
-                    "home"
-                ){
-
-                    button.classList.add(
-                        "active"
-                    );
-
-                }
-
-            }
-        );
-
-
-        /*
-           নতুন Matching Game শুরু
-        */
-
-        initGame();
-
-
-        window.scrollTo(
-            0,
-            0
-        );
-
-    }
-);
+    initGame();
+    window.scrollTo(0, 0);
+});
 
 
 /* =========================================================
    GAME → BACK TO HOME
 ========================================================= */
 
-gameBackBtn.addEventListener(
-    "click",
-    function(){
+gameBackBtn.addEventListener("click", function(e){
+    e.preventDefault();
 
-        homeGameScreen.classList.add(
-            "hidden"
-        );
-
-
-        homeMainCard.classList.remove(
-            "hidden"
-        );
-
-
-        /*
-           Home active রাখি
-        */
-
-        showPage("home");
-
-    }
-);
+    homeGameScreen.classList.add("hidden");
+    homeMainCard.classList.remove("hidden");
+    showPage("home");
+});
 
 
 /* =========================================================
@@ -1694,1130 +1534,313 @@ gameBackBtn.addEventListener(
 ========================================================= */
 
 const TOTAL_TASKS = 10;
-
 const REWARD_PER_TASK = 100;
-
-const SAVE_KEY =
-    "koko_memory_match_progress_v3";
-
-
-/* =========================================================
-   LOAD SAVED PROGRESS
-========================================================= */
+const SAVE_KEY = "koko_memory_match_progress_v3";
 
 let savedProgress = {};
-
 try{
-
-    savedProgress = JSON.parse(
-        localStorage.getItem(
-            SAVE_KEY
-        ) || "{}"
-    );
-
+    savedProgress = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
 }catch(error){
-
     savedProgress = {};
-
 }
 
-
-/* =========================================================
-   GAME VARIABLES
-========================================================= */
-
-let score =
-    Number(savedProgress.score) || 0;
-
-let currentTask =
-    Number(savedProgress.currentTask) || 0;
-
+let score = Number(savedProgress.score) || 0;
+let currentTask = Number(savedProgress.currentTask) || 0;
 let board = [];
-
 let firstSelection = null;
-
 let secondSelection = null;
-
 let isChecking = false;
-
 let matchedCount = 0;
-
 let taskBusy = false;
 
-
-/* =========================================================
-   HTML ELEMENTS
-========================================================= */
-
-const grid =
-    document.getElementById(
-        "puzzleGrid"
-    );
-
-
-const message =
-    document.getElementById(
-        "message"
-    );
-
-
-const scoreElement =
-    document.getElementById(
-        "score"
-    );
-
-
-const tasksElement =
-    document.getElementById(
-        "tasksCount"
-    );
-
-
-/* =========================================================
-   EMOJI SETS
-========================================================= */
+const grid = document.getElementById("puzzleGrid");
+const message = document.getElementById("message");
+const scoreElement = document.getElementById("score");
+const tasksElement = document.getElementById("tasksCount");
 
 const emojiPool = [
-
-    [
-        "🍎",
-        "🍌",
-        "🍇",
-        "🍊",
-        "🍉",
-        "🍓",
-        "🥝",
-        "🍒"
-    ],
-
-    [
-        "🐶",
-        "🐱",
-        "🐭",
-        "🐹",
-        "🐰",
-        "🦊",
-        "🐻",
-        "🐼"
-    ],
-
-    [
-        "⚽",
-        "🏀",
-        "🏈",
-        "⚾",
-        "🎾",
-        "🏐",
-        "🥎",
-        "🏆"
-    ],
-
-    [
-        "🚗",
-        "🚕",
-        "🚙",
-        "🚌",
-        "🏎️",
-        "🚓",
-        "🚑",
-        "🚒"
-    ],
-
-    [
-        "😀",
-        "😂",
-        "😍",
-        "😎",
-        "🤩",
-        "🥳",
-        "😇",
-        "🤗"
-    ]
-
+    ["🍎", "🍌", "🍇", "🍊", "🍉", "🍓", "🥝", "🍒"],
+    ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼"],
+    ["⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🥎", "🏆"],
+    ["🚗", "🚕", "🚙", "🚌", "🏎️", "🚓", "🚑", "🚒"],
+    ["😀", "😂", "😍", "😎", "🤩", "🥳", "😇", "🤗"]
 ];
 
-
-/* =========================================================
-   SAVE PROGRESS
-========================================================= */
-
 function saveProgress(){
-
     try{
-
-        localStorage.setItem(
-
-            SAVE_KEY,
-
-            JSON.stringify({
-
-                score:
-                    score,
-
-                currentTask:
-                    currentTask
-
-            })
-
-        );
-
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+            score: score,
+            currentTask: currentTask
+        }));
     }catch(error){
-
-        console.log(
-            "Could not save progress",
-            error
-        );
-
+        console.log("Could not save progress", error);
     }
-
 }
-
-
-/* =========================================================
-   UPDATE UI
-========================================================= */
 
 function updateUI(){
-
-    scoreElement.textContent =
-        score;
-
-
-    tasksElement.textContent =
-        currentTask;
-
-
+    scoreElement.textContent = score;
+    tasksElement.textContent = currentTask;
     updateExtraUI();
-
 }
-
-
-/* =========================================================
-   UPDATE HOME / WALLET
-========================================================= */
 
 function updateExtraUI(){
+    const homeScore = document.getElementById("homeScore");
+    const homeTasks = document.getElementById("homeTasks");
+    const walletScore = document.getElementById("walletScore");
 
-    const homeScore =
-        document.getElementById(
-            "homeScore"
-        );
-
-
-    const homeTasks =
-        document.getElementById(
-            "homeTasks"
-        );
-
-
-    const walletScore =
-        document.getElementById(
-            "walletScore"
-        );
-
-
-    if(homeScore){
-
-        homeScore.textContent =
-            score;
-
-    }
-
-
-    if(homeTasks){
-
-        homeTasks.textContent =
-            currentTask + "/10";
-
-    }
-
-
-    if(walletScore){
-
-        walletScore.textContent =
-            score;
-
-    }
-
+    if(homeScore) homeScore.textContent = score;
+    if(homeTasks) homeTasks.textContent = currentTask + "/10";
+    if(walletScore) walletScore.textContent = score;
 }
-
-
-/* =========================================================
-   SHUFFLE
-========================================================= */
 
 function shuffle(array){
-
     const arr = [...array];
-
-
-    for(
-        let i = arr.length - 1;
-        i > 0;
-        i--
-    ){
-
-        const j =
-            Math.floor(
-                Math.random() *
-                (i + 1)
-            );
-
-
-        [
-            arr[i],
-            arr[j]
-        ] = [
-            arr[j],
-            arr[i]
-        ];
-
+    for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-
-
     return arr;
-
 }
-
-
-/* =========================================================
-   START GAME
-========================================================= */
 
 function initGame(){
-
-    if(
-        currentTask >=
-        TOTAL_TASKS
-    ){
-
+    if(currentTask >= TOTAL_TASKS){
         grid.innerHTML = "";
-
-        message.className =
-            "success";
-
-        message.textContent =
-            "🏆 সব ১০টি Task সম্পূর্ণ হয়েছে! " +
-            "মোট Coins: " +
-            score;
-
+        message.className = "success";
+        message.textContent = "🏆 সব ১০টি Task সম্পূর্ণ হয়েছে! মোট Coins: " + score;
         updateUI();
-
         return;
-
     }
 
-
     firstSelection = null;
-
     secondSelection = null;
-
     isChecking = false;
-
     matchedCount = 0;
-
     taskBusy = false;
 
-
     message.className = "";
+    message.textContent = "সব জোড়া মিলাও।";
 
-    message.textContent =
-        "সব জোড়া মিলাও।";
-
-
-    const set =
-        emojiPool[
-            Math.floor(
-                Math.random() *
-                emojiPool.length
-            )
-        ];
-
-
-    board =
-        shuffle([
-            ...set,
-            ...set
-        ]);
-
-
+    const set = emojiPool[Math.floor(Math.random() * emojiPool.length)];
+    board = shuffle([...set, ...set]);
     renderBoard();
-
 }
-
-
-/* =========================================================
-   RENDER BOARD
-========================================================= */
 
 function renderBoard(){
-
     grid.innerHTML = "";
+    board.forEach(function(icon, index){
+        const tile = document.createElement("div");
+        tile.className = "puzzle-tile";
+        tile.id = "tile-" + index;
+        tile.textContent = "❓";
+        tile.setAttribute("role", "button");
+        tile.setAttribute("aria-label", "Memory card");
 
+        tile.addEventListener("click", function(){
+            handleTileClick(index);
+        });
 
-    board.forEach(
-        function(icon,index){
-
-            const tile =
-                document.createElement(
-                    "div"
-                );
-
-
-            tile.className =
-                "puzzle-tile";
-
-
-            tile.id =
-                "tile-" + index;
-
-
-            tile.textContent =
-                "❓";
-
-
-            tile.setAttribute(
-                "role",
-                "button"
-            );
-
-
-            tile.setAttribute(
-                "aria-label",
-                "Memory card"
-            );
-
-
-            tile.addEventListener(
-                "click",
-                function(){
-
-                    handleTileClick(
-                        index
-                    );
-
-                }
-            );
-
-
-            grid.appendChild(
-                tile
-            );
-
-        }
-    );
-
+        grid.appendChild(tile);
+    });
 }
-
-
-/* =========================================================
-   TILE CLICK
-========================================================= */
 
 function handleTileClick(index){
+    if(isChecking || taskBusy) return;
 
-    if(
-        isChecking ||
-        taskBusy
-    ){
+    const tile = document.getElementById("tile-" + index);
+    if(!tile || tile.classList.contains("flipped") || tile.classList.contains("matched")) return;
 
+    const icon = board[index];
+    tile.textContent = icon;
+    tile.classList.add("flipped");
+
+    if(firstSelection === null){
+        firstSelection = { index: index, icon: icon };
         return;
-
     }
 
-
-    const tile =
-        document.getElementById(
-            "tile-" + index
-        );
-
-
-    if(
-        !tile ||
-        tile.classList.contains(
-            "flipped"
-        ) ||
-        tile.classList.contains(
-            "matched"
-        )
-    ){
-
-        return;
-
-    }
-
-
-    const icon =
-        board[index];
-
-
-    tile.textContent =
-        icon;
-
-
-    tile.classList.add(
-        "flipped"
-    );
-
-
-    if(
-        firstSelection === null
-    ){
-
-        firstSelection = {
-
-            index:index,
-
-            icon:icon
-
-        };
-
-        return;
-
-    }
-
-
-    secondSelection = {
-
-        index:index,
-
-        icon:icon
-
-    };
-
-
+    secondSelection = { index: index, icon: icon };
     isChecking = true;
 
+    if(firstSelection.icon === secondSelection.icon && firstSelection.index !== secondSelection.index){
+        const firstTile = document.getElementById("tile-" + firstSelection.index);
+        const secondTile = document.getElementById("tile-" + secondSelection.index);
 
-    /* MATCH */
-
-    if(
-        firstSelection.icon ===
-        secondSelection.icon
-        &&
-        firstSelection.index !==
-        secondSelection.index
-    ){
-
-        const firstTile =
-            document.getElementById(
-                "tile-" +
-                firstSelection.index
-            );
-
-
-        const secondTile =
-            document.getElementById(
-                "tile-" +
-                secondSelection.index
-            );
-
-
-        if(firstTile){
-
-            firstTile.classList.add(
-                "matched"
-            );
-
-        }
-
-
-        if(secondTile){
-
-            secondTile.classList.add(
-                "matched"
-            );
-
-        }
-
+        if(firstTile) firstTile.classList.add("matched");
+        if(secondTile) secondTile.classList.add("matched");
 
         matchedCount += 2;
-
-
         resetSelections();
 
-
-        if(
-            matchedCount === 16
-        ){
-
+        if(matchedCount === 16){
             finishTask();
-
         }
+    }else{
+        const a = firstSelection.index;
+        const b = secondSelection.index;
 
+        setTimeout(function(){
+            const tileA = document.getElementById("tile-" + a);
+            const tileB = document.getElementById("tile-" + b);
+
+            if(tileA){
+                tileA.textContent = "❓";
+                tileA.classList.remove("flipped");
+            }
+            if(tileB){
+                tileB.textContent = "❓";
+                tileB.classList.remove("flipped");
+            }
+            resetSelections();
+        }, 800);
     }
-
-    /* NOT MATCH */
-
-    else{
-
-        const a =
-            firstSelection.index;
-
-
-        const b =
-            secondSelection.index;
-
-
-        setTimeout(
-
-            function(){
-
-                const tileA =
-                    document.getElementById(
-                        "tile-" + a
-                    );
-
-
-                const tileB =
-                    document.getElementById(
-                        "tile-" + b
-                    );
-
-
-                if(tileA){
-
-                    tileA.textContent =
-                        "❓";
-
-                    tileA.classList.remove(
-                        "flipped"
-                    );
-
-                }
-
-
-                if(tileB){
-
-                    tileB.textContent =
-                        "❓";
-
-                    tileB.classList.remove(
-                        "flipped"
-                    );
-
-                }
-
-
-                resetSelections();
-
-            },
-
-            800
-
-        );
-
-    }
-
 }
-
-
-/* =========================================================
-   RESET SELECTION
-========================================================= */
 
 function resetSelections(){
-
     firstSelection = null;
-
     secondSelection = null;
-
     isChecking = false;
-
 }
-
-
-/* =========================================================
-   MONETAG REWARDED AD
-========================================================= */
 
 function showRewardedAd(){
-
-    return new Promise(
-        function(resolve,reject){
-
-            if(
-                typeof window.show_11926774 !==
-                "function"
-            ){
-
-                reject(
-                    new Error(
-                        "Monetag Rewarded Ad is not loaded."
-                    )
-                );
-
-                return;
-
-            }
-
-
-            try{
-
-                const adResult =
-                    window.show_11926774();
-
-
-                if(
-                    !adResult ||
-                    typeof adResult.then !==
-                    "function"
-                ){
-
-                    reject(
-                        new Error(
-                            "Rewarded Ad did not return a Promise."
-                        )
-                    );
-
-                    return;
-
-                }
-
-
-                adResult.then(
-
-                    function(){
-
-                        resolve();
-
-                    },
-
-                    function(error){
-
-                        reject(error);
-
-                    }
-
-                );
-
-            }catch(error){
-
-                reject(error);
-
-            }
-
+    return new Promise(function(resolve, reject){
+        if(typeof window.show_11926774 !== "function"){
+            reject(new Error("Monetag Rewarded Ad is not loaded."));
+            return;
         }
-    );
-
+        try{
+            const adResult = window.show_11926774();
+            if(!adResult || typeof adResult.then !== "function"){
+                reject(new Error("Rewarded Ad did not return a Promise."));
+                return;
+            }
+            adResult.then(function(){ resolve(); }, function(error){ reject(error); });
+        }catch(error){
+            reject(error);
+        }
+    });
 }
-
-
-/* =========================================================
-   FINISH TASK
-========================================================= */
 
 function finishTask(){
-
-    if(taskBusy){
-
-        return;
-
-    }
-
-
+    if(taskBusy) return;
     taskBusy = true;
 
-
-    message.className =
-        "info";
-
-
-    message.textContent =
-        "🎉 Task Complete! " +
-        "Rewarded Ad চালু হচ্ছে...";
-
+    message.className = "info";
+    message.textContent = "🎉 Task Complete! Rewarded Ad চালু হচ্ছে...";
 
     showRewardedAd()
+    .then(function(){
+        score += REWARD_PER_TASK;
+        currentTask += 1;
+        saveProgress();
+        updateUI();
 
-    .then(
+        message.className = "success";
+        message.textContent = "🎉 Ad সম্পূর্ণ হয়েছে! +100 Coins যোগ হয়েছে।";
 
-        function(){
-
-            score +=
-                REWARD_PER_TASK;
-
-
-            currentTask += 1;
-
-
-            saveProgress();
-
-
-            updateUI();
-
-
-            message.className =
-                "success";
-
-
-            message.textContent =
-                "🎉 Ad সম্পূর্ণ হয়েছে! " +
-                "+100 Coins যোগ হয়েছে।";
-
-
-            if(
-                currentTask >=
-                TOTAL_TASKS
-            ){
-
-                setTimeout(
-
-                    function(){
-
-                        grid.innerHTML = "";
-
-
-                        message.className =
-                            "success";
-
-
-                        message.textContent =
-                            "🏆 অভিনন্দন! " +
-                            "সব ১০টি Task সম্পূর্ণ হয়েছে। " +
-                            "মোট Coins: " +
-                            score;
-
-
-                        updateUI();
-
-                    },
-
-                    1200
-
-                );
-
-
-                return;
-
-            }
-
-
-            setTimeout(
-
-                function(){
-
-                    initGame();
-
-                },
-
-                1200
-
-            );
-
+        if(currentTask >= TOTAL_TASKS){
+            setTimeout(function(){
+                grid.innerHTML = "";
+                message.className = "success";
+                message.textContent = "🏆 অভিনন্দন! সব ১০টি Task সম্পূর্ণ হয়েছে। মোট Coins: " + score;
+                updateUI();
+            }, 1200);
+            return;
         }
 
-    )
-
-    .catch(
-
-        function(error){
-
-            console.log(
-                "Rewarded ad not completed:",
-                error
-            );
-
-
-            taskBusy = false;
-
-
-            message.className =
-                "error";
-
-
-            message.textContent =
-                "❌ Ad সম্পূর্ণ হয়নি। " +
-                "100 Coins পাওয়া যায়নি। " +
-                "আবার চেষ্টা করো।";
-
-        }
-
-    );
-
+        setTimeout(function(){
+            initGame();
+        }, 1200);
+    })
+    .catch(function(error){
+        console.log("Rewarded ad not completed:", error);
+        taskBusy = false;
+        message.className = "error";
+        message.textContent = "❌ Ad সম্পূর্ণ হয়নি। 100 Coins পাওয়া যায়নি। আবার চেষ্টা করো।";
+    });
 }
 
 
 /* =========================================================
-   PROFILE
+   PROFILE & INVITE SYSTEM
 ========================================================= */
 
-const profileBtn =
-    document.getElementById(
-        "profileBtn"
-    );
+const profileBtn = document.getElementById("profileBtn");
+const profileOverlay = document.getElementById("profileOverlay");
+const closeProfile = document.getElementById("closeProfile");
 
+profileBtn.addEventListener("click", function(){
+    profileOverlay.classList.add("show");
+});
 
-const profileOverlay =
-    document.getElementById(
-        "profileOverlay"
-    );
+closeProfile.addEventListener("click", function(){
+    profileOverlay.classList.remove("show");
+});
 
-
-const closeProfile =
-    document.getElementById(
-        "closeProfile"
-    );
-
-
-profileBtn.addEventListener(
-    "click",
-    function(){
-
-        profileOverlay.classList.add(
-            "show"
-        );
-
+profileOverlay.addEventListener("click", function(event){
+    if(event.target === profileOverlay){
+        profileOverlay.classList.remove("show");
     }
-);
-
-
-closeProfile.addEventListener(
-    "click",
-    function(){
-
-        profileOverlay.classList.remove(
-            "show"
-        );
-
-    }
-);
-
-
-profileOverlay.addEventListener(
-    "click",
-    function(event){
-
-        if(
-            event.target ===
-            profileOverlay
-        ){
-
-            profileOverlay.classList.remove(
-                "show"
-            );
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   TELEGRAM USER PROFILE
-========================================================= */
+});
 
 try{
-
-    if(
-        window.Telegram &&
-        window.Telegram.WebApp
-    ){
-
-        const tg =
-            window.Telegram.WebApp;
-
-
-        tg.ready();
-
-
-        const user =
-            tg.initDataUnsafe &&
-            tg.initDataUnsafe.user;
-
-
+    if(window.Telegram && window.Telegram.WebApp){
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
         if(user){
-
-            const name =
-                [
-                    user.first_name,
-                    user.last_name
-                ]
-                .filter(Boolean)
-                .join(" ");
-
-
-            const username =
-                user.username
-                    ? "@" + user.username
-                    : "Telegram User";
-
-
+            const name = [user.first_name, user.last_name].filter(Boolean).join(" ");
+            const username = user.username ? "@" + user.username : "Telegram User";
             if(name){
-
-                document.getElementById(
-                    "profileName"
-                ).textContent =
-                    name;
-
+                document.getElementById("profileName").textContent = name;
             }
-
-
-            document.getElementById(
-                "profileUsername"
-            ).textContent =
-                username;
-
+            document.getElementById("profileUsername").textContent = username;
         }
-
     }
-
 }catch(error){
-
-    console.log(
-        "Telegram profile unavailable"
-    );
-
+    console.log("Telegram profile unavailable");
 }
-
-
-/* =========================================================
-   INVITE SYSTEM
-========================================================= */
 
 function getInviteLink(){
-
     let userId = "user";
-
-
     try{
-
-        if(
-            window.Telegram &&
-            window.Telegram.WebApp &&
-            window.Telegram.WebApp
-                .initDataUnsafe &&
-            window.Telegram.WebApp
-                .initDataUnsafe.user
-        ){
-
-            userId =
-                window.Telegram.WebApp
-                    .initDataUnsafe.user.id;
-
+        if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user){
+            userId = window.Telegram.WebApp.initDataUnsafe.user.id;
         }
-
     }catch(error){
-
         userId = "user";
-
     }
-
-
-    return "https://t.me/koko_mini_bot?start=" +
-        encodeURIComponent(
-            "ref_" + userId
-        );
-
+    return "https://t.me/koko_mini_bot?start=" + encodeURIComponent("ref_" + userId);
 }
 
+const inviteLinkElement = document.getElementById("inviteLink");
+const inviteLink = getInviteLink();
+inviteLinkElement.textContent = inviteLink;
 
-const inviteLinkElement =
-    document.getElementById(
-        "inviteLink"
-    );
+document.getElementById("copyInviteBtn").addEventListener("click", async function(){
+    try{
+        await navigator.clipboard.writeText(inviteLink);
+        this.textContent = "✓ Copied!";
+        setTimeout(()=>{ this.textContent = "Copy Invite Link"; }, 1500);
+    }catch(error){
+        alert("Copy করা যায়নি।");
+    }
+});
 
-
-const inviteLink =
-    getInviteLink();
-
-
-inviteLinkElement.textContent =
-    inviteLink;
-
-
-/* COPY */
-
-document
-    .getElementById(
-        "copyInviteBtn"
-    )
-    .addEventListener(
-        "click",
-        async function(){
-
-            try{
-
-                await navigator.clipboard.writeText(
-                    inviteLink
-                );
-
-
-                this.textContent =
-                    "✓ Copied!";
-
-
-                setTimeout(
-                    ()=>{
-                        this.textContent =
-                            "Copy Invite Link";
-                    },
-                    1500
-                );
-
-            }catch(error){
-
-                alert(
-                    "Copy করা যায়নি।"
-                );
-
-            }
-
+document.getElementById("shareInviteBtn").addEventListener("click", async function(){
+    try{
+        if(navigator.share){
+            await navigator.share({
+                title: "KOKO Mini App",
+                text: "Join KOKO Mini App",
+                url: inviteLink
+            });
+        }else{
+            await navigator.clipboard.writeText(inviteLink);
+            alert("Invite link copied!");
         }
-    );
-
-
-/* SHARE */
-
-document
-    .getElementById(
-        "shareInviteBtn"
-    )
-    .addEventListener(
-        "click",
-        async function(){
-
-            try{
-
-                if(
-                    navigator.share
-                ){
-
-                    await navigator.share({
-
-                        title:
-                            "KOKO Mini App",
-
-                        text:
-                            "Join KOKO Mini App",
-
-                        url:
-                            inviteLink
-
-                    });
-
-                }else{
-
-                    await navigator.clipboard.writeText(
-                        inviteLink
-                    );
-
-                    alert(
-                        "Invite link copied!"
-                    );
-
-                }
-
-            }catch(error){
-
-                console.log(
-                    "Share cancelled"
-                );
-
-            }
-
-        }
-    );
+    }catch(error){
+        console.log("Share cancelled");
+    }
+});
 
 
 /* =========================================================
@@ -2825,12 +1848,9 @@ document
 ========================================================= */
 
 updateUI();
-
-initGame();
-
 showPage("home");
 
 </script>
 
 </body>
-      </html>
+</html>
