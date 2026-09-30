@@ -802,9 +802,7 @@ h1{
 
 <div class="app">
 
-    <!-- =========================
-         TOP BAR
-    ========================== -->
+    <!-- TOP BAR -->
 
     <div class="topbar">
 
@@ -827,9 +825,6 @@ h1{
             </div>
 
         </div>
-
-
-        <!-- PROFILE -->
 
         <button
             class="profile-btn"
@@ -855,9 +850,7 @@ h1{
     </div>
 
 
-    <!-- =========================
-         HOME PAGE
-    ========================== -->
+    <!-- HOME PAGE -->
 
     <div
         class="page"
@@ -877,7 +870,6 @@ h1{
                 Match the cards and complete your tasks.
             </p>
 
-
             <div class="balance-card">
 
                 <div class="balance-label">
@@ -889,7 +881,6 @@ h1{
                 </div>
 
             </div>
-
 
             <div class="home-stats">
 
@@ -907,7 +898,6 @@ h1{
 
                 </div>
 
-
                 <div class="stat-box">
 
                     <div class="stat-label">
@@ -922,7 +912,6 @@ h1{
 
             </div>
 
-
             <button
                 class="go-task"
                 id="goTaskBtn">
@@ -934,9 +923,7 @@ h1{
         </div>
 
 
-        <!-- =========================
-             HOME MATCHING GAME
-        ========================== -->
+        <!-- HOME MATCHING GAME -->
 
         <div
             id="homeGameScreen"
@@ -957,7 +944,6 @@ h1{
                 </div>
 
             </div>
-
 
             <div class="container">
 
@@ -993,10 +979,7 @@ h1{
     </div>
 
 
-    <!-- =========================
-         TASK PAGE
-         EMPTY FOR NOW
-    ========================== -->
+    <!-- TASK PAGE -->
 
     <div
         class="page hidden"
@@ -1004,9 +987,7 @@ h1{
     </div>
 
 
-    <!-- =========================
-         INVITE PAGE
-    ========================== -->
+    <!-- INVITE PAGE -->
 
     <div
         class="page hidden"
@@ -1021,7 +1002,6 @@ h1{
             <p class="section-sub">
                 তোমার বন্ধুদের KOKO-তে Invite করো।
             </p>
-
 
             <div class="info-row">
 
@@ -1061,7 +1041,6 @@ h1{
 
             </div>
 
-
             <div
                 class="invite-code"
                 id="inviteLink">
@@ -1070,7 +1049,6 @@ h1{
 
             </div>
 
-
             <button
                 class="action-btn"
                 id="copyInviteBtn">
@@ -1078,7 +1056,6 @@ h1{
                 Copy Invite Link
 
             </button>
-
 
             <button
                 class="action-btn"
@@ -1093,9 +1070,7 @@ h1{
     </div>
 
 
-    <!-- =========================
-         ADS PAGE
-    ========================== -->
+    <!-- ADS PAGE -->
 
     <div
         class="page hidden"
@@ -1110,7 +1085,6 @@ h1{
             <p class="section-sub">
                 Rewarded ads শুধুমাত্র Task সম্পূর্ণ করার সময় চালু হবে।
             </p>
-
 
             <div class="info-row">
 
@@ -1145,7 +1119,6 @@ h1{
                 </div>
 
             </div>
-
 
             <div class="info-row">
 
@@ -1184,9 +1157,7 @@ h1{
     </div>
 
 
-    <!-- =========================
-         WALLET PAGE
-    ========================== -->
+    <!-- WALLET PAGE -->
 
     <div
         class="page hidden"
@@ -1202,7 +1173,6 @@ h1{
                 তোমার বর্তমান KOKO balance এখানে দেখতে পারবে।
             </p>
 
-
             <div class="balance-card">
 
                 <div class="balance-label">
@@ -1214,7 +1184,6 @@ h1{
                 </div>
 
             </div>
-
 
             <div class="info-row">
 
@@ -1257,14 +1226,11 @@ h1{
 </div>
 
 
-<!-- =========================
-     BOTTOM NAVIGATION
-========================== -->
+<!-- BOTTOM NAVIGATION -->
 
 <div class="bottom-nav">
 
     <div class="nav-inner">
-
 
         <!-- HOME -->
 
@@ -1412,9 +1378,7 @@ h1{
 </div>
 
 
-<!-- =========================
-     PROFILE POPUP
-========================== -->
+<!-- PROFILE POPUP -->
 
 <div
     class="profile-overlay"
@@ -1487,12 +1451,6 @@ const navButtons =
     document.querySelectorAll(".nav-btn");
 
 
-const homePage =
-    document.getElementById(
-        "homePage"
-    );
-
-
 const homeMainCard =
     document.getElementById(
         "homeMainCard"
@@ -1504,6 +1462,10 @@ const homeGameScreen =
         "homeGameScreen"
     );
 
+
+/* =========================================================
+   PAGE SWITCH
+========================================================= */
 
 function showPage(pageName){
 
@@ -1528,8 +1490,8 @@ function showPage(pageName){
 
 
     /*
-       যখন Home ছাড়া অন্য page খোলা হবে,
-       তখন Home-এর Game Screen বন্ধ হবে।
+       Home ছাড়া অন্য page হলে
+       Home-এর Game Screen বন্ধ হবে।
     */
 
     if(pageName !== "home"){
@@ -1544,6 +1506,10 @@ function showPage(pageName){
 
     }
 
+
+    /*
+       Navigation Active State
+    */
 
     navButtons.forEach(
         function(button){
@@ -1570,6 +1536,7 @@ function showPage(pageName){
 
     updateExtraUI();
 
+
     window.scrollTo(
         0,
         0
@@ -1577,6 +1544,10 @@ function showPage(pageName){
 
 }
 
+
+/* =========================================================
+   NORMAL NAVIGATION BUTTONS
+========================================================= */
 
 navButtons.forEach(
     function(button){
@@ -1617,21 +1588,68 @@ goTaskBtn.addEventListener(
     function(){
 
         /*
-           Home page-ই active থাকবে।
-           শুধু Home-এর ভিতরের Game Screen খুলবে।
+           IMPORTANT:
+
+           Game Home page-এর ভিতরেই খুলবে।
+           Task page-এ যাবে না।
         */
 
         showPage("home");
 
+
+        /*
+           Home-এর মূল Card hide
+        */
 
         homeMainCard.classList.add(
             "hidden"
         );
 
 
+        /*
+           Matching Game show
+        */
+
         homeGameScreen.classList.remove(
             "hidden"
         );
+
+
+        /*
+           FORCE HOME ACTIVE
+
+           Game খোলা অবস্থায়ও
+           নিচের Home button active থাকবে।
+        */
+
+        navButtons.forEach(
+            function(button){
+
+                button.classList.remove(
+                    "active"
+                );
+
+
+                if(
+                    button.dataset.page ===
+                    "home"
+                ){
+
+                    button.classList.add(
+                        "active"
+                    );
+
+                }
+
+            }
+        );
+
+
+        /*
+           নতুন Matching Game শুরু
+        */
+
+        initGame();
 
 
         window.scrollTo(
@@ -1661,6 +1679,10 @@ gameBackBtn.addEventListener(
         );
 
 
+        /*
+           Home active রাখি
+        */
+
         showPage("home");
 
     }
@@ -1668,7 +1690,7 @@ gameBackBtn.addEventListener(
 
 
 /* =========================================================
-   ORIGINAL GAME SETTINGS
+   GAME SETTINGS
 ========================================================= */
 
 const TOTAL_TASKS = 10;
@@ -1871,7 +1893,7 @@ function updateUI(){
 
 
 /* =========================================================
-   UPDATE HOME / WALLET UI
+   UPDATE HOME / WALLET
 ========================================================= */
 
 function updateExtraUI(){
@@ -2811,4 +2833,4 @@ showPage("home");
 </script>
 
 </body>
-</html>
+      </html>
