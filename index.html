@@ -1565,12 +1565,14 @@ h1{
 "use strict";
 
 let tgUser = null;
+let startParam = "";
 try {
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
         tgUser = tg.initDataUnsafe && tg.initDataUnsafe.user;
+        startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
     }
 } catch (e) {
     console.log("Telegram init error", e);
@@ -1671,16 +1673,13 @@ const TOTAL_TASKS = 10;
 const REWARD_PER_TASK = 100;
 const MASTER_SAVE_KEY = "koko_memory_match_master_progress";
 
-// Safe migration fallback from older keys so user data is NEVER lost
 function loadUserProgress(){
     let data = null;
     try {
-        // Try master persistent key first
         const raw = localStorage.getItem(MASTER_SAVE_KEY);
         if(raw) {
             data = JSON.parse(raw);
         } else {
-            // Check legacy keys to migrate seamlessly
             const legacyKeys = ["koko_memory_match_progress_v8", "koko_memory_match_progress_v7", "koko_memory_match_progress_v6", "koko_memory_match_progress_v5", "koko_memory_match_progress_v4"];
             for(let i=0; i<legacyKeys.length; i++){
                 const oldRaw = localStorage.getItem(legacyKeys[i]);
@@ -1721,6 +1720,18 @@ let ref2Claimed = userProg.ref2Claimed;
 let ref3Claimed = userProg.ref3Claimed;
 let ref4Claimed = userProg.ref4Claimed;
 let ref5Claimed = userProg.ref5Claimed;
+
+// Handle referral tracking from startParam for any user
+try {
+    if(startParam && startParam.startsWith("ref_")) {
+        let currentUserId = tgUser ? tgUser.id : "local_guest";
+        let refTrackKey = "koko_ref_tracked_" + currentUserId;
+        if(!localStorage.getItem(refTrackKey)) {
+            localStorage.setItem(refTrackKey, "true");
+            referralCount += 1;
+        }
+    }
+} catch(e) {}
 
 let board = [];
 let firstSelection = null;
@@ -1841,7 +1852,7 @@ function showRewardedAd(){
 
 
 /* =========================================================
-   TASK CLAIM WITH AD INTEGRATION
+   TASK CLAIM WITH AD INTEGRATION (FOR ALL USERS)
 ========================================================= */
 
 function processTaskClaim(taskType){
@@ -2132,4 +2143,4 @@ showPage("home");
 </script>
 
 </body>
-              </html>
+                          </html>
