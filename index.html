@@ -1053,7 +1053,7 @@ h1{
             </h2>
 
             <p class="section-sub">
-                Complete tasks to earn extra coins.
+                Complete tasks and watch ads to earn coins.
             </p>
 
             <!-- 1. Add Profile Picture -->
@@ -1062,7 +1062,7 @@ h1{
                     <div class="task-title">Add Profile Picture</div>
                     <div class="task-desc">Set your profile picture (+100 Coins)</div>
                 </div>
-                <button class="task-btn" id="claimPicBtn" onclick="claimPicReward()" disabled>Claim</button>
+                <button class="task-btn" id="claimPicBtn" onclick="processTaskClaim('pic')" disabled>Claim</button>
             </div>
 
             <!-- 2. Set Username -->
@@ -1072,7 +1072,7 @@ h1{
                         <div class="task-title">Set Username</div>
                         <div class="task-desc">Enter your username (+100 Coins)</div>
                     </div>
-                    <button class="task-btn" id="claimUsernameBtn" onclick="claimUsernameReward()" disabled>Claim</button>
+                    <button class="task-btn" id="claimUsernameBtn" onclick="processTaskClaim('username')" disabled>Claim</button>
                 </div>
                 <div class="task-input-group">
                     <input type="text" id="usernameInput" class="task-input" placeholder="Enter your username..." oninput="checkUsernameInput()">
@@ -1085,7 +1085,7 @@ h1{
                     <div class="task-title">Invite 1 Friend</div>
                     <div class="task-desc">Refer 1 friend (+100 Coins)</div>
                 </div>
-                <button class="task-btn" id="claimRef1Btn" onclick="claimRef1Reward()" disabled>Claim</button>
+                <button class="task-btn" id="claimRef1Btn" onclick="processTaskClaim('ref1')" disabled>Claim</button>
             </div>
 
             <!-- 4. Invite 2 Friends -->
@@ -1094,7 +1094,7 @@ h1{
                     <div class="task-title">Invite 2 Friends</div>
                     <div class="task-desc">Refer 2 friends (+200 Coins)</div>
                 </div>
-                <button class="task-btn" id="claimRef2Btn" onclick="claimRef2Reward()" disabled>Claim</button>
+                <button class="task-btn" id="claimRef2Btn" onclick="processTaskClaim('ref2')" disabled>Claim</button>
             </div>
 
             <!-- 5. Invite 3 Friends -->
@@ -1103,7 +1103,7 @@ h1{
                     <div class="task-title">Invite 3 Friends</div>
                     <div class="task-desc">Refer 3 friends (+300 Coins)</div>
                 </div>
-                <button class="task-btn" id="claimRef3Btn" onclick="claimRef3Reward()" disabled>Claim</button>
+                <button class="task-btn" id="claimRef3Btn" onclick="processTaskClaim('ref3')" disabled>Claim</button>
             </div>
 
             <!-- 6. Invite 4 Friends -->
@@ -1112,7 +1112,7 @@ h1{
                     <div class="task-title">Invite 4 Friends</div>
                     <div class="task-desc">Refer 4 friends (+400 Coins)</div>
                 </div>
-                <button class="task-btn" id="claimRef4Btn" onclick="claimRef4Reward()" disabled>Claim</button>
+                <button class="task-btn" id="claimRef4Btn" onclick="processTaskClaim('ref4')" disabled>Claim</button>
             </div>
 
             <!-- 7. Invite 5 Friends -->
@@ -1121,7 +1121,7 @@ h1{
                     <div class="task-title">Invite 5 Friends</div>
                     <div class="task-desc">Refer 5 friends (+500 Coins)</div>
                 </div>
-                <button class="task-btn" id="claimRef5Btn" onclick="claimRef5Reward()" disabled>Claim</button>
+                <button class="task-btn" id="claimRef5Btn" onclick="processTaskClaim('ref5')" disabled>Claim</button>
             </div>
 
         </div>
@@ -1528,7 +1528,7 @@ h1{
 
     <div class="profile-popup">
 
-        <div class="profile-avatar">
+        <div class="profile-avatar" id="profileAvatarContainer">
             👤
         </div>
 
@@ -1664,31 +1664,63 @@ gameBackBtn.addEventListener("click", function(e){
 
 
 /* =========================================================
-   GAME SETTINGS & TASKS DATA
+   GAME SETTINGS & ROBUST MIGRATION STORAGE DATA
 ========================================================= */
 
 const TOTAL_TASKS = 10;
 const REWARD_PER_TASK = 100;
-const SAVE_KEY = "koko_memory_match_progress_v6";
+const MASTER_SAVE_KEY = "koko_memory_match_master_progress";
 
-let savedProgress = {};
-try{
-    savedProgress = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
-}catch(error){
-    savedProgress = {};
+// Safe migration fallback from older keys so user data is NEVER lost
+function loadUserProgress(){
+    let data = null;
+    try {
+        // Try master persistent key first
+        const raw = localStorage.getItem(MASTER_SAVE_KEY);
+        if(raw) {
+            data = JSON.parse(raw);
+        } else {
+            // Check legacy keys to migrate seamlessly
+            const legacyKeys = ["koko_memory_match_progress_v8", "koko_memory_match_progress_v7", "koko_memory_match_progress_v6", "koko_memory_match_progress_v5", "koko_memory_match_progress_v4"];
+            for(let i=0; i<legacyKeys.length; i++){
+                const oldRaw = localStorage.getItem(legacyKeys[i]);
+                if(oldRaw){
+                    data = JSON.parse(oldRaw);
+                    break;
+                }
+            }
+        }
+    } catch(e){
+        data = {};
+    }
+
+    return {
+        score: Number(data && data.score) || 0,
+        currentTask: Number(data && data.currentTask) || 0,
+        referralCount: Number(data && data.referralCount) || 0,
+        picClaimed: Boolean(data && data.picClaimed) || false,
+        usernameClaimed: Boolean(data && data.usernameClaimed) || false,
+        ref1Claimed: Boolean(data && data.ref1Claimed) || false,
+        ref2Claimed: Boolean(data && data.ref2Claimed) || false,
+        ref3Claimed: Boolean(data && data.ref3Claimed) || false,
+        ref4Claimed: Boolean(data && data.ref4Claimed) || false,
+        ref5Claimed: Boolean(data && data.ref5Claimed) || false
+    };
 }
 
-let score = Number(savedProgress.score) || 0;
-let currentTask = Number(savedProgress.currentTask) || 0;
-let referralCount = Number(savedProgress.referralCount) || 0;
+let userProg = loadUserProgress();
 
-let picClaimed = Boolean(savedProgress.picClaimed) || false;
-let usernameClaimed = Boolean(savedProgress.usernameClaimed) || false;
-let ref1Claimed = Boolean(savedProgress.ref1Claimed) || false;
-let ref2Claimed = Boolean(savedProgress.ref2Claimed) || false;
-let ref3Claimed = Boolean(savedProgress.ref3Claimed) || false;
-let ref4Claimed = Boolean(savedProgress.ref4Claimed) || false;
-let ref5Claimed = Boolean(savedProgress.ref5Claimed) || false;
+let score = userProg.score;
+let currentTask = userProg.currentTask;
+let referralCount = userProg.referralCount;
+
+let picClaimed = userProg.picClaimed;
+let usernameClaimed = userProg.usernameClaimed;
+let ref1Claimed = userProg.ref1Claimed;
+let ref2Claimed = userProg.ref2Claimed;
+let ref3Claimed = userProg.ref3Claimed;
+let ref4Claimed = userProg.ref4Claimed;
+let ref5Claimed = userProg.ref5Claimed;
 
 let board = [];
 let firstSelection = null;
@@ -1712,7 +1744,7 @@ const emojiPool = [
 
 function saveProgress(){
     try{
-        localStorage.setItem(SAVE_KEY, JSON.stringify({
+        localStorage.setItem(MASTER_SAVE_KEY, JSON.stringify({
             score: score,
             currentTask: currentTask,
             referralCount: referralCount,
@@ -1755,7 +1787,6 @@ function updateTaskUI(){
     const ref4Btn = document.getElementById("claimRef4Btn");
     const ref5Btn = document.getElementById("claimRef5Btn");
 
-    // Profile Picture Check (Telegram user has photo or saved)
     let hasProfilePic = tgUser && tgUser.photo_url;
     if(picClaimed){
         picBtn.textContent = "Claimed ✓";
@@ -1764,7 +1795,6 @@ function updateTaskUI(){
         picBtn.disabled = !hasProfilePic;
     }
 
-    // Username Check
     const usernameInput = document.getElementById("usernameInput");
     if(usernameClaimed){
         userBtn.textContent = "Claimed ✓";
@@ -1774,7 +1804,6 @@ function updateTaskUI(){
         userBtn.disabled = !hasUsername;
     }
 
-    // Referrals Checks
     ref1Claimed ? (ref1Btn.textContent = "Claimed ✓", ref1Btn.disabled = true) : (ref1Btn.disabled = referralCount < 1);
     ref2Claimed ? (ref2Btn.textContent = "Claimed ✓", ref2Btn.disabled = true) : (ref2Btn.disabled = referralCount < 2);
     ref3Claimed ? (ref3Btn.textContent = "Claimed ✓", ref3Btn.disabled = true) : (ref3Btn.disabled = referralCount < 3);
@@ -1788,70 +1817,72 @@ function checkUsernameInput(){
 
 
 /* =========================================================
-   TASK CLAIM LOGIC
+   MONETAG REWARDED AD SDK WRAPPER
 ========================================================= */
 
-function claimPicReward(){
-    if(picClaimed) return;
-    score += 100;
-    picClaimed = true;
-    saveProgress();
-    updateUI();
-    alert("100 Coins added for Profile Picture!");
+function showRewardedAd(){
+    return new Promise(function(resolve, reject){
+        if(typeof window.show_11926774 !== "function"){
+            reject(new Error("Monetag Rewarded Ad is not loaded."));
+            return;
+        }
+        try{
+            const adResult = window.show_11926774();
+            if(!adResult || typeof adResult.then !== "function"){
+                reject(new Error("Rewarded Ad did not return a Promise."));
+                return;
+            }
+            adResult.then(function(){ resolve(); }, function(error){ reject(error); });
+        }catch(error){
+            reject(error);
+        }
+    });
 }
 
-function claimUsernameReward(){
-    if(usernameClaimed) return;
-    score += 100;
-    usernameClaimed = true;
-    saveProgress();
-    updateUI();
-    alert("100 Coins added for Username!");
-}
 
-function claimRef1Reward(){
-    if(ref1Claimed || referralCount < 1) return;
-    score += 100;
-    ref1Claimed = true;
-    saveProgress();
-    updateUI();
-    alert("100 Coins added for 1 Referral!");
-}
+/* =========================================================
+   TASK CLAIM WITH AD INTEGRATION
+========================================================= */
 
-function claimRef2Reward(){
-    if(ref2Claimed || referralCount < 2) return;
-    score += 200;
-    ref2Claimed = true;
-    saveProgress();
-    updateUI();
-    alert("200 Coins added for 2 Referrals!");
-}
-
-function claimRef3Reward(){
-    if(ref3Claimed || referralCount < 3) return;
-    score += 300;
-    ref3Claimed = true;
-    saveProgress();
-    updateUI();
-    alert("300 Coins added for 3 Referrals!");
-}
-
-function claimRef4Reward(){
-    if(ref4Claimed || referralCount < 4) return;
-    score += 400;
-    ref4Claimed = true;
-    saveProgress();
-    updateUI();
-    alert("400 Coins added for 4 Referrals!");
-}
-
-function claimRef5Reward(){
-    if(ref5Claimed || referralCount < 5) return;
-    score += 500;
-    ref5Claimed = true;
-    saveProgress();
-    updateUI();
-    alert("500 Coins added for 5 Referrals!");
+function processTaskClaim(taskType){
+    showRewardedAd()
+    .then(function(){
+        if(taskType === 'pic' && !picClaimed){
+            score += 100;
+            picClaimed = true;
+            alert("Ad completed! +100 Coins added for Profile Picture!");
+        } else if(taskType === 'username' && !usernameClaimed){
+            score += 100;
+            usernameClaimed = true;
+            alert("Ad completed! +100 Coins added for Username!");
+        } else if(taskType === 'ref1' && !ref1Claimed && referralCount >= 1){
+            score += 100;
+            ref1Claimed = true;
+            alert("Ad completed! +100 Coins added for 1 Referral!");
+        } else if(taskType === 'ref2' && !ref2Claimed && referralCount >= 2){
+            score += 200;
+            ref2Claimed = true;
+            alert("Ad completed! +200 Coins added for 2 Referrals!");
+        } else if(taskType === 'ref3' && !ref3Claimed && referralCount >= 3){
+            score += 300;
+            ref3Claimed = true;
+            alert("Ad completed! +300 Coins added for 3 Referrals!");
+        } else if(taskType === 'ref4' && !ref4Claimed && referralCount >= 4){
+            score += 400;
+            ref4Claimed = true;
+            alert("Ad completed! +400 Coins added for 4 Referrals!");
+        } else if(taskType === 'ref5' && !ref5Claimed && referralCount >= 5){
+            score += 500;
+            ref5Claimed = true;
+            alert("Ad completed! +500 Coins added for 5 Referrals!");
+        }
+        saveProgress();
+        updateUI();
+    })
+    .catch(function(error){
+        console.log("Rewarded ad not completed:", error);
+        alert("Ad failed or skipped. Reward not granted.");
+    });
 }
 
 
@@ -1967,25 +1998,6 @@ function resetSelections(){
     isChecking = false;
 }
 
-function showRewardedAd(){
-    return new Promise(function(resolve, reject){
-        if(typeof window.show_11926774 !== "function"){
-            reject(new Error("Monetag Rewarded Ad is not loaded."));
-            return;
-        }
-        try{
-            const adResult = window.show_11926774();
-            if(!adResult || typeof adResult.then !== "function"){
-                reject(new Error("Rewarded Ad did not return a Promise."));
-                return;
-            }
-            adResult.then(function(){ resolve(); }, function(error){ reject(error); });
-        }catch(error){
-            reject(error);
-        }
-    });
-}
-
 function finishTask(){
     if(taskBusy) return;
     taskBusy = true;
@@ -2056,6 +2068,11 @@ try{
             document.getElementById("profileName").textContent = name;
         }
         document.getElementById("profileUsername").textContent = username;
+
+        if(tgUser.photo_url){
+            const avatarContainer = document.getElementById("profileAvatarContainer");
+            avatarContainer.innerHTML = `<img src="${tgUser.photo_url}" alt="Profile" style="width:50px;height:50px;border-radius:50%;object-fit:cover;">`;
+        }
     }
 }catch(error){
     console.log("Telegram profile unavailable");
@@ -2115,4 +2132,4 @@ showPage("home");
 </script>
 
 </body>
-      </html>
+              </html>
