@@ -1,49 +1,33 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KOKO Memory Match</title>
 
-<title>Koko Memory Match</title>
-
-<!-- Telegram Web App SDK -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<!-- Monetag Rewarded Interstitial SDK -->
-<script
-    src="//libtl.com/sdk.js"
-    data-zone="11926774"
-    data-sdk="show_11926774">
-</script>
+<!-- Monetag Rewarded Interstitial -->
+<script src="//libtl.com/sdk.js"
+        data-zone="11926774"
+        data-sdk="show_11926774"></script>
 
 <style>
-
 *{
+    margin:0;
+    padding:0;
     box-sizing:border-box;
     -webkit-tap-highlight-color:transparent;
 }
 
-html{
-    background:#07111f;
-}
-
 body{
-    margin:0;
-    padding:0;
-    min-height:100vh;
-
+    font-family:Arial,Helvetica,sans-serif;
     background:
-        radial-gradient(
-            circle at 50% -10%,
-            #173b63 0%,
-            #0f172a 38%,
-            #07111f 100%
-        );
-
+        radial-gradient(circle at top left,#14295b 0,#071329 35%,#030914 100%);
     color:#fff;
-    font-family:Arial,"Segoe UI",sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
 }
 
 button{
@@ -52,22 +36,26 @@ button{
 
 .app{
     width:100%;
+    max-width:520px;
     min-height:100vh;
-    padding:14px 12px 100px;
+    margin:auto;
+    padding-bottom:90px;
 }
 
-/* =========================
-   TOP BAR
-========================= */
+/* TOP BAR */
 
 .topbar{
-    width:100%;
-    max-width:420px;
-    margin:0 auto 14px;
-
+    height:70px;
     display:flex;
     align-items:center;
     justify-content:space-between;
+    padding:12px 18px;
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(3,9,20,.88);
+    backdrop-filter:blur(18px);
+    border-bottom:1px solid rgba(255,255,255,.06);
 }
 
 .brand{
@@ -77,785 +65,544 @@ button{
 }
 
 .logo{
-    width:42px;
-    height:42px;
-
+    width:43px;
+    height:43px;
+    border-radius:14px;
     display:flex;
     align-items:center;
     justify-content:center;
-
-    border-radius:13px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #38bdf8,
-            #6366f1
-        );
-
-    box-shadow:
-        0 7px 25px rgba(56,189,248,.22);
-
     font-size:22px;
     font-weight:900;
+    background:linear-gradient(135deg,#6c5ce7,#00d4ff);
+    box-shadow:0 8px 25px rgba(0,212,255,.18);
 }
 
 .brand-text{
-    text-align:left;
+    line-height:1.1;
 }
 
-.brand-name{
-    font-size:17px;
-    font-weight:800;
-    letter-spacing:.3px;
+.brand-text strong{
+    font-size:18px;
+    letter-spacing:1px;
 }
 
-.brand-sub{
-    margin-top:2px;
-    color:#94a3b8;
-    font-size:11px;
+.brand-text span{
+    display:block;
+    font-size:10px;
+    color:#8f9bb3;
+    margin-top:4px;
 }
 
 .profile-btn{
-    width:44px;
-    height:44px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border:1px solid rgba(148,163,184,.18);
-    border-radius:14px;
-
-    background:rgba(30,41,59,.82);
-
-    box-shadow:
-        0 8px 22px rgba(0,0,0,.22);
-
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:50%;
+    background:#111d36;
+    color:white;
+    font-size:19px;
     cursor:pointer;
+    border:1px solid rgba(255,255,255,.08);
 }
 
-.profile-btn svg{
-    width:23px;
-    height:23px;
-
-    stroke:#e2e8f0;
-    stroke-width:1.8;
-}
-
-/* =========================
-   PAGE
-========================= */
+/* PAGE */
 
 .page{
-    width:100%;
-    max-width:420px;
-    margin:0 auto;
-}
-
-.page.hidden{
     display:none;
+    padding:20px 16px;
 }
 
-/* =========================
-   HOME
-========================= */
-
-.home-card{
-    padding:20px;
-
-    border:1px solid rgba(56,189,248,.12);
-    border-radius:22px;
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(30,41,59,.96),
-            rgba(15,23,42,.96)
-        );
-
-    box-shadow:
-        0 15px 35px rgba(0,0,0,.25);
+.page.active{
+    display:block;
 }
 
-.home-card.hidden{
-    display:none;
+/* HOME */
+
+.welcome{
+    margin-top:8px;
+    margin-bottom:18px;
 }
 
-.home-title{
-    margin:0;
+.welcome h1{
     font-size:25px;
-    font-weight:800;
+    margin-bottom:7px;
 }
 
-.home-sub{
-    margin:8px 0 20px;
-    color:#94a3b8;
+.welcome p{
+    color:#8996af;
     font-size:14px;
 }
 
 .balance-card{
-    padding:18px;
-
-    border-radius:18px;
-
+    position:relative;
+    overflow:hidden;
     background:
-        linear-gradient(
-            135deg,
-            rgba(37,99,235,.24),
-            rgba(124,58,237,.22)
-        );
-
-    border:1px solid rgba(96,165,250,.16);
+        linear-gradient(135deg,rgba(108,92,231,.25),rgba(0,212,255,.09));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    padding:22px;
+    margin-bottom:16px;
+    box-shadow:0 15px 45px rgba(0,0,0,.25);
 }
 
-.balance-label{
-    color:#94a3b8;
+.balance-card:after{
+    content:"";
+    position:absolute;
+    width:130px;
+    height:130px;
+    right:-40px;
+    top:-50px;
+    background:rgba(0,212,255,.10);
+    border-radius:50%;
+}
+
+.balance-title{
+    color:#9ba8c1;
     font-size:13px;
 }
 
 .balance{
-    margin-top:5px;
-    font-size:30px;
+    font-size:38px;
     font-weight:900;
+    margin-top:8px;
 }
 
-.balance span{
-    color:#facc15;
+.coin{
+    color:#ffd84d;
 }
 
-.home-stats{
+.stats{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin-top:12px;
+    gap:12px;
+    margin-bottom:18px;
 }
 
-.stat-box{
-    padding:15px;
-    border-radius:16px;
-    background:#172235;
-    border:1px solid rgba(148,163,184,.09);
+.stat-card{
+    background:#0b162b;
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:18px;
+    padding:17px;
 }
 
-.stat-label{
-    color:#94a3b8;
-    font-size:12px;
+.stat-card .icon{
+    font-size:22px;
+    margin-bottom:9px;
 }
 
-.stat-value{
-    margin-top:6px;
-    font-size:21px;
-    font-weight:800;
+.stat-card small{
+    display:block;
+    color:#77859f;
+    font-size:11px;
+    margin-bottom:5px;
 }
 
-.go-task{
+.stat-card strong{
+    font-size:20px;
+}
+
+.start-btn{
     width:100%;
-    margin-top:14px;
-    padding:14px;
-
-    border:0;
-    border-radius:15px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #38bdf8,
-            #6366f1
-        );
-
-    color:white;
-
-    font-size:15px;
-    font-weight:800;
-
-    cursor:pointer;
-
-    box-shadow:
-        0 8px 20px rgba(56,189,248,.18);
-}
-
-.go-task:active{
-    transform:scale(.98);
-}
-
-/* =========================
-   HOME GAME SCREEN
-========================= */
-
-.home-game-screen{
-    width:100%;
-}
-
-.home-game-screen.hidden{
-    display:none;
-}
-
-.game-header{
-    width:100%;
-    max-width:400px;
-    margin:0 auto 12px;
-
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-}
-
-.game-back-btn{
-    padding:11px 14px;
-
-    border:1px solid rgba(148,163,184,.15);
-    border-radius:13px;
-
-    background:#172235;
-    color:#e2e8f0;
-
-    font-size:13px;
-    font-weight:800;
-
-    cursor:pointer;
-}
-
-.game-back-btn:active{
-    transform:scale(.97);
-}
-
-.game-title{
-    flex:1;
-
-    text-align:right;
-
-    color:#38bdf8;
-
+    border:none;
+    border-radius:17px;
+    padding:16px;
     font-size:16px;
     font-weight:800;
-}
-
-/* =========================
-   GAME CONTAINER
-========================= */
-
-.container{
-    width:100%;
-    max-width:400px;
-    margin:0 auto;
-    padding:20px 14px;
-
-    background:#1e293b;
-
-    border-radius:18px;
-
-    box-shadow:
-        0 10px 25px rgba(0,0,0,.3);
-}
-
-h1{
-    margin:0 0 10px;
-    font-size:26px;
-    color:#38bdf8;
-}
-
-.score-board{
-    margin:10px 0;
-    padding:10px;
-
-    border-radius:10px;
-
-    background:#334155;
-
-    font-size:18px;
-}
-
-.tasks-left{
-    margin:12px 0;
-
-    color:#94a3b8;
-
-    font-size:15px;
-}
-
-.preview-text{
-    margin:10px 0 14px;
-
-    color:#cbd5e1;
-
-    font-size:14px;
-}
-
-.puzzle-grid{
-    width:100%;
-    max-width:330px;
-    aspect-ratio:1/1;
-
-    margin:0 auto 16px;
-    padding:6px;
-
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:6px;
-
-    background:#334155;
-
-    border-radius:14px;
-}
-
-.puzzle-tile{
-    min-width:0;
-    min-height:0;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    background:#475569;
-
-    border-radius:9px;
-
-    font-size:clamp(22px,7vw,30px);
-
+    color:white;
+    background:linear-gradient(135deg,#6c5ce7,#00a8ff);
+    box-shadow:0 10px 30px rgba(0,168,255,.18);
     cursor:pointer;
-    user-select:none;
-
-    transition:
-        transform .15s,
-        background .2s;
 }
 
-.puzzle-tile:active{
-    transform:scale(.93);
-}
-
-.puzzle-tile.flipped{
-    background:#334155;
-    border:2px solid #38bdf8;
-}
-
-.puzzle-tile.matched{
-    background:#059669;
-    opacity:.7;
-    cursor:default;
-}
-
-#message{
-    min-height:45px;
-
-    margin-top:14px;
-
-    font-size:14px;
-    font-weight:bold;
-    line-height:1.5;
-}
-
-.success{
-    color:#86efac;
-}
-
-.error{
-    color:#fca5a5;
-}
-
-.info{
-    color:#facc15;
-}
-
-/* =========================
-   OTHER PAGES
-========================= */
-
-.section-card{
-    padding:20px;
-
-    border-radius:22px;
-
-    background:#1e293b;
-
-    border:1px solid rgba(148,163,184,.10);
-
-    box-shadow:
-        0 10px 25px rgba(0,0,0,.22);
-}
+/* SECTION */
 
 .section-title{
-    margin:0 0 8px;
-
-    font-size:23px;
-    font-weight:800;
+    font-size:21px;
+    margin-bottom:7px;
 }
 
 .section-sub{
-    margin:0 0 20px;
-
-    color:#94a3b8;
-
-    font-size:14px;
-    line-height:1.5;
+    color:#7f8ca5;
+    font-size:13px;
+    margin-bottom:18px;
 }
 
-.info-row{
+/* TASK */
+
+.task-card{
+    background:#0b162b;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:19px;
+    padding:16px;
+    margin-bottom:11px;
     display:flex;
     align-items:center;
-    gap:13px;
-
-    padding:15px;
-    margin-top:10px;
-
-    border-radius:16px;
-
-    background:#172235;
+    gap:12px;
 }
 
-.info-icon{
-    width:42px;
-    height:42px;
-
-    flex:none;
-
+.task-icon{
+    width:45px;
+    height:45px;
+    border-radius:14px;
     display:flex;
     align-items:center;
     justify-content:center;
-
-    border-radius:13px;
-
-    background:#243449;
-}
-
-.info-icon svg{
-    width:21px;
-    height:21px;
-
-    stroke:#38bdf8;
-
-    fill:none;
-    stroke-width:1.8;
-}
-
-.info-text{
-    text-align:left;
-}
-
-.info-title{
-    font-size:14px;
-    font-weight:700;
-}
-
-.info-desc{
-    margin-top:4px;
-
-    color:#94a3b8;
-
-    font-size:12px;
-}
-
-.invite-code{
-    margin-top:16px;
-    padding:14px;
-
-    text-align:center;
-
-    border-radius:14px;
-
-    background:#0f172a;
-
-    color:#38bdf8;
-
-    font-size:13px;
-
-    word-break:break-all;
-}
-
-.action-btn{
-    width:100%;
-
-    margin-top:12px;
-    padding:14px;
-
-    border:0;
-    border-radius:14px;
-
-    background:#2563eb;
-
-    color:white;
-
-    font-size:14px;
-    font-weight:800;
-
-    cursor:pointer;
-}
-
-.action-btn:active{
-    transform:scale(.98);
-}
-
-/* =========================
-   TASK STYLES
-========================= */
-
-.task-item{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:15px;
-    margin-top:10px;
-    border-radius:16px;
-    background:#172235;
-    border:1px solid rgba(148,163,184,.09);
+    background:#142344;
+    font-size:21px;
+    flex-shrink:0;
 }
 
 .task-info{
     flex:1;
-    text-align:left;
-    padding-right:10px;
 }
 
-.task-title{
+.task-info strong{
     font-size:14px;
-    font-weight:700;
 }
 
-.task-desc{
-    margin-top:4px;
-    color:#94a3b8;
-    font-size:12px;
+.task-info span{
+    display:block;
+    margin-top:5px;
+    color:#7d8aa3;
+    font-size:11px;
 }
 
 .task-btn{
-    padding:10px 14px;
-    border:0;
+    border:none;
+    background:#1c315a;
+    color:#7fcfff;
+    padding:9px 12px;
     border-radius:10px;
-    background:#2563eb;
-    color:white;
-    font-size:13px;
     font-weight:700;
     cursor:pointer;
-    flex:none;
+    font-size:11px;
 }
 
-.task-btn:disabled{
-    background:#475569;
-    color:#94a3b8;
-    cursor:not-allowed;
+.task-btn.done{
+    background:#123d2c;
+    color:#4de59c;
 }
 
-.task-input-group{
-    margin-top:8px;
+/* GAME */
+
+.game-header{
     display:flex;
-    gap:8px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
 }
 
-.task-input{
-    flex:1;
+.game-count{
+    background:#101f3b;
+    border:1px solid rgba(255,255,255,.06);
     padding:8px 12px;
-    border-radius:8px;
-    border:1px solid rgba(148,163,184,.2);
-    background:#0f172a;
-    color:#fff;
+    border-radius:10px;
+    font-size:12px;
+    color:#9daac2;
+}
+
+.game-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+}
+
+.card{
+    aspect-ratio:1;
+    perspective:800px;
+    cursor:pointer;
+}
+
+.card-inner{
+    width:100%;
+    height:100%;
+    position:relative;
+    transition:transform .35s;
+    transform-style:preserve-3d;
+}
+
+.card.flipped .card-inner,
+.card.matched .card-inner{
+    transform:rotateY(180deg);
+}
+
+.card-front,
+.card-back{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    border-radius:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.card-front{
+    background:
+        linear-gradient(145deg,#182c52,#0d1931);
+    border:1px solid rgba(255,255,255,.08);
+    font-size:23px;
+}
+
+.card-back{
+    transform:rotateY(180deg);
+    background:linear-gradient(145deg,#263d78,#142650);
+    border:1px solid rgba(255,255,255,.08);
+    font-size:31px;
+}
+
+.card.matched .card-back{
+    box-shadow:0 0 18px rgba(0,220,160,.25);
+}
+
+.message{
+    text-align:center;
+    margin:15px 0;
+    min-height:22px;
+    color:#91a0b9;
     font-size:13px;
 }
 
-/* =========================
-   BOTTOM NAVIGATION (5 items)
-========================= */
+.message.success{
+    color:#43e69a;
+}
+
+.message.error{
+    color:#ff7180;
+}
+
+.message.info{
+    color:#72cfff;
+}
+
+/* INVITE */
+
+.invite-box{
+    background:#0b162b;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:22px;
+    padding:20px;
+}
+
+.ref-count{
+    text-align:center;
+    padding:12px 0 20px;
+}
+
+.ref-count strong{
+    display:block;
+    font-size:38px;
+    color:#58d7ff;
+}
+
+.ref-count span{
+    color:#7e8ba4;
+    font-size:12px;
+}
+
+.ref-link{
+    background:#050c19;
+    border-radius:12px;
+    padding:13px;
+    color:#91a1bc;
+    font-size:11px;
+    word-break:break-all;
+    margin-bottom:10px;
+}
+
+.action-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+}
+
+.action-btn{
+    border:none;
+    border-radius:12px;
+    padding:13px;
+    background:#16294c;
+    color:white;
+    font-weight:700;
+    cursor:pointer;
+}
+
+/* ADS */
+
+.ad-box{
+    background:linear-gradient(145deg,#0c1b36,#091326);
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:22px;
+    padding:25px 20px;
+    text-align:center;
+}
+
+.ad-icon{
+    width:70px;
+    height:70px;
+    border-radius:22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 15px;
+    font-size:32px;
+    background:#15284c;
+}
+
+.ad-box h2{
+    margin-bottom:8px;
+}
+
+.ad-box p{
+    color:#7f8ca4;
+    line-height:1.6;
+    font-size:13px;
+}
+
+/* WALLET */
+
+.wallet-card{
+    background:linear-gradient(135deg,#111f3d,#09162b);
+    border-radius:23px;
+    padding:25px;
+    text-align:center;
+    border:1px solid rgba(255,255,255,.07);
+}
+
+.wallet-card .wallet-icon{
+    font-size:38px;
+}
+
+.wallet-card .wallet-balance{
+    font-size:35px;
+    font-weight:900;
+    margin:12px 0 5px;
+}
+
+.wallet-card p{
+    color:#7e8ca5;
+    font-size:12px;
+}
+
+/* BOTTOM NAV */
 
 .bottom-nav{
     position:fixed;
-
-    left:0;
-    right:0;
-    bottom:0;
-
-    z-index:1000;
-
-    padding:
-        8px
-        8px
-        calc(8px + env(safe-area-inset-bottom));
-
-    background:
-        rgba(7,17,31,.94);
-
-    backdrop-filter:blur(18px);
-    -webkit-backdrop-filter:blur(18px);
-
-    border-top:
-        1px solid rgba(148,163,184,.12);
-
-    box-shadow:
-        0 -10px 30px rgba(0,0,0,.25);
-}
-
-.nav-inner{
-    width:100%;
-    max-width:430px;
-
-    margin:0 auto;
-
+    left:50%;
+    bottom:10px;
+    transform:translateX(-50%);
+    width:calc(100% - 20px);
+    max-width:500px;
+    height:70px;
+    border-radius:22px;
+    background:rgba(7,16,32,.94);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.08);
     display:grid;
-
-    grid-template-columns:
-        repeat(5,1fr);
-
-    gap:3px;
+    grid-template-columns:repeat(5,1fr);
+    z-index:100;
+    box-shadow:0 15px 40px rgba(0,0,0,.45);
 }
 
-.nav-btn{
-    position:relative;
-
-    min-height:58px;
-
+.nav-item{
+    border:none;
+    background:transparent;
+    color:#687793;
     display:flex;
     flex-direction:column;
-
     align-items:center;
     justify-content:center;
-
-    gap:4px;
-
-    border:0;
-
-    background:transparent;
-
-    color:#64748b;
-
+    gap:5px;
     cursor:pointer;
-}
-
-.nav-btn svg{
-    width:21px;
-    height:21px;
-
-    fill:none;
-
-    stroke:currentColor;
-
-    stroke-width:1.8;
-
-    transition:
-        transform .2s,
-        color .2s;
-}
-
-.nav-label{
     font-size:10px;
-    font-weight:700;
 }
 
-.nav-btn.active{
-    color:#38bdf8;
+.nav-item .nav-icon{
+    font-size:21px;
 }
 
-.nav-btn.active svg{
-    transform:translateY(-1px);
+.nav-item.active{
+    color:#55d7ff;
 }
 
-.nav-btn.active::before{
-    content:"";
-
-    position:absolute;
-
-    top:-8px;
-
-    width:28px;
-    height:3px;
-
-    border-radius:
-        0 0 5px 5px;
-
-    background:#38bdf8;
-
-    box-shadow:
-        0 0 12px rgba(56,189,248,.65);
-}
-
-/* =========================
-   PROFILE POPUP
-========================= */
+/* PROFILE POPUP */
 
 .profile-overlay{
+    display:none;
     position:fixed;
     inset:0;
-
-    z-index:2000;
-
-    display:none;
-
-    align-items:flex-start;
-    justify-content:flex-end;
-
-    padding:70px 14px 0;
-
-    background:rgba(0,0,0,.35);
+    background:rgba(0,0,0,.6);
+    z-index:200;
 }
 
 .profile-overlay.show{
-    display:flex;
+    display:block;
 }
 
 .profile-popup{
-    width:220px;
-
+    position:absolute;
+    top:75px;
+    right:15px;
+    width:280px;
+    background:#0b172d;
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:20px;
     padding:18px;
-
-    border-radius:18px;
-
-    background:#1e293b;
-
-    border:1px solid rgba(148,163,184,.16);
-
-    box-shadow:
-        0 20px 50px rgba(0,0,0,.45);
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
 }
 
-.popup-title{
-    font-size:16px;
+.profile-top{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:15px;
+}
+
+.profile-avatar{
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    background:#1b3158;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+}
+
+.profile-name{
     font-weight:800;
 }
 
-.popup-name{
-    margin-top:5px;
-
-    color:#38bdf8;
-
-    font-size:14px;
+.profile-username{
+    color:#71809a;
+    font-size:11px;
+    margin-top:4px;
 }
 
 .close-profile{
     width:100%;
-
-    margin-top:14px;
-    padding:10px;
-
-    border:0;
-    border-radius:10px;
-
-    background:#334155;
-
-    color:white;
-
+    border:none;
+    background:#162641;
+    color:#b5c0d3;
+    padding:11px;
+    border-radius:11px;
     cursor:pointer;
 }
 
-/* =========================
-   SMALL SCREEN
-========================= */
+/* RESPONSIVE */
 
-@media(max-width:350px){
-
-    .app{
-        padding-left:8px;
-        padding-right:8px;
+@media(max-width:360px){
+    .game-grid{
+        gap:7px;
     }
 
-    .nav-label{
-        font-size:9px;
+    .card-front{
+        font-size:19px;
     }
 
-    .nav-btn{
-        min-height:55px;
+    .card-back{
+        font-size:25px;
     }
-
 }
-
 </style>
 </head>
 
@@ -864,696 +611,374 @@ h1{
 <div class="app">
 
     <!-- TOP BAR -->
-
     <div class="topbar">
-
         <div class="brand">
-
-            <div class="logo">
-                K
-            </div>
+            <div class="logo">K</div>
 
             <div class="brand-text">
+                <strong>KOKO</strong>
+                <span>MEMORY MATCH</span>
+            </div>
+        </div>
 
-                <div class="brand-name">
-                    KOKO
-                </div>
+        <button class="profile-btn" onclick="openProfile()">👤</button>
+    </div>
 
-                <div class="brand-sub">
-                    Memory Match
-                </div>
 
+    <!-- HOME -->
+    <section id="homePage" class="page active">
+
+        <div class="welcome">
+            <h1>Welcome to KOKO 👋</h1>
+            <p>Match the cards and complete your tasks.</p>
+        </div>
+
+        <div class="balance-card">
+            <div class="balance-title">Available Coins</div>
+
+            <div class="balance">
+                <span class="coin">🪙</span>
+                <span id="homeCoins">0</span>
+            </div>
+        </div>
+
+        <div class="stats">
+
+            <div class="stat-card">
+                <div class="icon">🎯</div>
+                <small>Completed Tasks</small>
+                <strong id="homeTasks">0/10</strong>
+            </div>
+
+            <div class="stat-card">
+                <div class="icon">🏆</div>
+                <small>Possible Reward</small>
+                <strong>1000</strong>
             </div>
 
         </div>
 
-        <button
-            class="profile-btn"
-            id="profileBtn"
-            aria-label="Profile">
-
-            <svg
-                viewBox="0 0 24 24"
-                fill="none">
-
-                <circle
-                    cx="12"
-                    cy="8"
-                    r="3.5"/>
-
-                <path
-                    d="M4.5 20c.8-4 3.2-6 7.5-6s6.7 2 7.5 6"/>
-
-            </svg>
-
+        <button class="start-btn" onclick="startMatching()">
+            🎯 Start Matching Task
         </button>
 
-    </div>
-
-
-    <!-- HOME PAGE -->
-
-    <div
-        class="page"
-        id="homePage">
-
-        <!-- HOME MAIN -->
-
-        <div
-            class="home-card"
-            id="homeMainCard">
-
-            <h2 class="home-title">
-                Welcome to KOKO 👋
-            </h2>
-
-            <p class="home-sub">
-                Match the cards and complete your tasks.
-            </p>
-
-            <div class="balance-card">
-
-                <div class="balance-label">
-                    Your Balance
-                </div>
-
-                <div class="balance">
-                    🪙 <span id="homeScore">0</span>
-                </div>
-
-            </div>
-
-            <div class="home-stats">
-
-                <div class="stat-box">
-
-                    <div class="stat-label">
-                        Completed Tasks
-                    </div>
-
-                    <div
-                        class="stat-value"
-                        id="homeTasks">
-                        0/10
-                    </div>
-
-                </div>
-
-                <div class="stat-box">
-
-                    <div class="stat-label">
-                        Possible Reward
-                    </div>
-
-                    <div class="stat-value">
-                        1000
-                    </div>
-
-                </div>
-
-            </div>
-
-            <button
-                class="go-task"
-                id="goTaskBtn">
-
-                🎯 Start Matching Task
-
-            </button>
-
-        </div>
-
-
-        <!-- HOME MATCHING GAME -->
-
-        <div
-            id="homeGameScreen"
-            class="home-game-screen hidden">
-
-            <div class="game-header">
-
-                <button
-                    class="game-back-btn"
-                    id="gameBackBtn">
-
-                    ← Back
-
-                </button>
-
-                <div class="game-title">
-                    Koko Match
-                </div>
-
-            </div>
-
-            <div class="container">
-
-                <h1>
-                    Koko Memory Match
-                </h1>
-
-                <div class="score-board">
-                    🪙 Coins:
-                    <span id="score">0</span>
-                </div>
-
-                <div class="tasks-left">
-                    Completed Tasks:
-                    <span id="tasksCount">0</span>/10
-                </div>
-
-                <div class="preview-text">
-                    সব জোড়া মিলিয়ে Task সম্পূর্ণ করো এবং ১০০ Coins পাও।
-                </div>
-
-                <div
-                    class="puzzle-grid"
-                    id="puzzleGrid">
-                </div>
-
-                <div id="message"></div>
-
-            </div>
-
-        </div>
-
-    </div>
+    </section>
 
 
     <!-- TASK PAGE -->
+    <section id="taskPage" class="page">
 
-    <div
-        class="page hidden"
-        id="taskPage">
+        <h2 class="section-title">Daily Tasks</h2>
+        <p class="section-sub">
+            Complete tasks and earn more coins.
+        </p>
 
-        <div class="section-card">
+        <div class="task-card">
+            <div class="task-icon">🖼️</div>
 
-            <h2 class="section-title">
-                Tasks
-            </h2>
-
-            <p class="section-sub">
-                Complete tasks and watch ads to earn coins.
-            </p>
-
-            <!-- 1. Add Profile Picture -->
-            <div class="task-item">
-                <div class="task-info">
-                    <div class="task-title">Add Profile Picture</div>
-                    <div class="task-desc">Set your profile picture (+100 Coins)</div>
-                </div>
-                <button class="task-btn" id="claimPicBtn" onclick="processTaskClaim('pic')" disabled>Claim</button>
+            <div class="task-info">
+                <strong>Add Profile Picture</strong>
+                <span>Reward: +100 Coins</span>
             </div>
 
-            <!-- 2. Set Username -->
-            <div class="task-item" style="flex-direction:column; align-items:stretch;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div class="task-info">
-                        <div class="task-title">Set Username</div>
-                        <div class="task-desc">Enter your username (+100 Coins)</div>
-                    </div>
-                    <button class="task-btn" id="claimUsernameBtn" onclick="processTaskClaim('username')" disabled>Claim</button>
-                </div>
-                <div class="task-input-group">
-                    <input type="text" id="usernameInput" class="task-input" placeholder="Enter your username..." oninput="checkUsernameInput()">
-                </div>
+            <button id="picTaskBtn"
+                    class="task-btn"
+                    onclick="processTaskClaim('pic')">
+                Claim
+            </button>
+        </div>
+
+
+        <div class="task-card">
+            <div class="task-icon">✏️</div>
+
+            <div class="task-info">
+                <strong>Set Username</strong>
+                <span>Reward: +100 Coins</span>
             </div>
 
-            <!-- 3. Invite 1 Friend -->
-            <div class="task-item">
-                <div class="task-info">
-                    <div class="task-title">Invite 1 Friend</div>
-                    <div class="task-desc">Refer 1 friend (+100 Coins)</div>
-                </div>
-                <button class="task-btn" id="claimRef1Btn" onclick="processTaskClaim('ref1')" disabled>Claim</button>
+            <button id="usernameTaskBtn"
+                    class="task-btn"
+                    onclick="processTaskClaim('username')">
+                Claim
+            </button>
+        </div>
+
+
+        <div class="task-card">
+            <div class="task-icon">👥</div>
+
+            <div class="task-info">
+                <strong>Invite 1 Friend</strong>
+                <span>Reward: +100 Coins</span>
             </div>
 
-            <!-- 4. Invite 2 Friends -->
-            <div class="task-item">
-                <div class="task-info">
-                    <div class="task-title">Invite 2 Friends</div>
-                    <div class="task-desc">Refer 2 friends (+200 Coins)</div>
-                </div>
-                <button class="task-btn" id="claimRef2Btn" onclick="processTaskClaim('ref2')" disabled>Claim</button>
+            <button id="ref1TaskBtn"
+                    class="task-btn"
+                    onclick="processTaskClaim('ref1')">
+                Claim
+            </button>
+        </div>
+
+
+        <div class="task-card">
+            <div class="task-icon">👥</div>
+
+            <div class="task-info">
+                <strong>Invite 2 Friends</strong>
+                <span>Reward: +200 Coins</span>
             </div>
 
-            <!-- 5. Invite 3 Friends -->
-            <div class="task-item">
-                <div class="task-info">
-                    <div class="task-title">Invite 3 Friends</div>
-                    <div class="task-desc">Refer 3 friends (+300 Coins)</div>
-                </div>
-                <button class="task-btn" id="claimRef3Btn" onclick="processTaskClaim('ref3')" disabled>Claim</button>
+            <button id="ref2TaskBtn"
+                    class="task-btn"
+                    onclick="processTaskClaim('ref2')">
+                Claim
+            </button>
+        </div>
+
+
+        <div class="task-card">
+            <div class="task-icon">👥</div>
+
+            <div class="task-info">
+                <strong>Invite 3 Friends</strong>
+                <span>Reward: +300 Coins</span>
             </div>
 
-            <!-- 6. Invite 4 Friends -->
-            <div class="task-item">
-                <div class="task-info">
-                    <div class="task-title">Invite 4 Friends</div>
-                    <div class="task-desc">Refer 4 friends (+400 Coins)</div>
-                </div>
-                <button class="task-btn" id="claimRef4Btn" onclick="processTaskClaim('ref4')" disabled>Claim</button>
+            <button id="ref3TaskBtn"
+                    class="task-btn"
+                    onclick="processTaskClaim('ref3')">
+                Claim
+            </button>
+        </div>
+
+
+        <div class="task-card">
+            <div class="task-icon">👥</div>
+
+            <div class="task-info">
+                <strong>Invite 4 Friends</strong>
+                <span>Reward: +400 Coins</span>
             </div>
 
-            <!-- 7. Invite 5 Friends -->
-            <div class="task-item">
-                <div class="task-info">
-                    <div class="task-title">Invite 5 Friends</div>
-                    <div class="task-desc">Refer 5 friends (+500 Coins)</div>
-                </div>
-                <button class="task-btn" id="claimRef5Btn" onclick="processTaskClaim('ref5')" disabled>Claim</button>
+            <button id="ref4TaskBtn"
+                    class="task-btn"
+                    onclick="processTaskClaim('ref4')">
+                Claim
+            </button>
+        </div>
+
+
+        <div class="task-card">
+            <div class="task-icon">👥</div>
+
+            <div class="task-info">
+                <strong>Invite 5 Friends</strong>
+                <span>Reward: +500 Coins</span>
+            </div>
+
+            <button id="ref5TaskBtn"
+                    class="task-btn"
+                    onclick="processTaskClaim('ref5')">
+                Claim
+            </button>
+        </div>
+
+    </section>
+
+
+    <!-- GAME PAGE -->
+    <section id="gamePage" class="page">
+
+        <div class="game-header">
+
+            <div>
+                <h2 class="section-title">Memory Match</h2>
+                <p class="section-sub">Find all matching pairs.</p>
+            </div>
+
+            <div class="game-count">
+                Task <span id="gameTaskNumber">1</span>/10
             </div>
 
         </div>
 
-    </div>
+        <div id="gameGrid" class="game-grid"></div>
+
+        <div id="gameMessage" class="message">
+            Find all 8 pairs to complete this task.
+        </div>
+
+    </section>
 
 
     <!-- INVITE PAGE -->
+    <section id="invitePage" class="page">
 
-    <div
-        class="page hidden"
-        id="invitePage">
+        <h2 class="section-title">Invite Friends</h2>
 
-        <div class="section-card">
+        <p class="section-sub">
+            Invite friends and unlock referral rewards.
+        </p>
 
-            <h2 class="section-title">
-                Invite Friends
-            </h2>
+        <div class="invite-box">
 
-            <p class="section-sub">
-                তোমার বন্ধুদের KOKO-তে Invite করো।
-            </p>
-
-            <div class="info-row">
-
-                <div class="info-icon">
-
-                    <svg viewBox="0 0 24 24">
-
-                        <path
-                            d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-
-                        <circle
-                            cx="9"
-                            cy="7"
-                            r="4"/>
-
-                        <path
-                            d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-
-                        <path
-                            d="M16 3.13a4 4 0 0 1 0 7.75"/>
-
-                    </svg>
-
-                </div>
-
-                <div class="info-text">
-
-                    <div class="info-title">
-                        Invite your friends
-                    </div>
-
-                    <div class="info-desc">
-                        তোমার referral link share করো।
-                    </div>
-
-                </div>
-
+            <div class="ref-count">
+                <strong id="referralCount">0</strong>
+                <span>Total Friends Invited</span>
             </div>
 
-            <div
-                class="invite-code"
-                id="inviteLink">
-
-                Referral link তৈরি হচ্ছে...
-
+            <div id="inviteLink"
+                 class="ref-link">
+                Loading referral link...
             </div>
 
-            <button
-                class="action-btn"
-                id="copyInviteBtn">
+            <div class="action-row">
 
-                Copy Invite Link
+                <button class="action-btn"
+                        onclick="copyInviteLink()">
+                    📋 Copy
+                </button>
 
-            </button>
+                <button class="action-btn"
+                        onclick="shareInviteLink()">
+                    🚀 Share
+                </button>
 
-            <button
-                class="action-btn"
-                id="shareInviteBtn">
-
-                Share Invite Link
-
-            </button>
+            </div>
 
         </div>
 
-    </div>
+    </section>
 
 
     <!-- ADS PAGE -->
+    <section id="adsPage" class="page">
 
-    <div
-        class="page hidden"
-        id="adsPage">
+        <h2 class="section-title">Rewarded Ads</h2>
 
-        <div class="section-card">
+        <p class="section-sub">
+            Complete tasks and watch rewarded ads.
+        </p>
 
-            <h2 class="section-title">
-                Ads
-            </h2>
+        <div class="ad-box">
 
-            <p class="section-sub">
-                Rewarded ads শুধুমাত্র Task সম্পূর্ণ করার সময় চালু হবে।
+            <div class="ad-icon">🎬</div>
+
+            <h2>Rewarded Interstitial</h2>
+
+            <p>
+                After completing a matching task,
+                a rewarded advertisement will appear.
+                Your reward is added after the ad is completed.
             </p>
-
-            <div class="info-row">
-
-                <div class="info-icon">
-
-                    <svg viewBox="0 0 24 24">
-
-                        <rect
-                            x="3"
-                            y="5"
-                            width="18"
-                            height="14"
-                            rx="3"/>
-
-                        <path
-                            d="m10 9 5 3-5 3V9z"/>
-
-                    </svg>
-
-                </div>
-
-                <div class="info-text">
-
-                    <div class="info-title">
-                        Rewarded Interstitial
-                    </div>
-
-                    <div class="info-desc">
-                        Task complete হওয়ার পর Rewarded Ad চালু হবে।
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="info-row">
-
-                <div class="info-icon">
-
-                    <svg viewBox="0 0 24 24">
-
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"/>
-
-                        <path
-                            d="M12 7v5l3 2"/>
-
-                    </svg>
-
-                </div>
-
-                <div class="info-text">
-
-                    <div class="info-title">
-                        Reward System
-                    </div>
-
-                    <div class="info-desc">
-                        Ad সফলভাবে complete হলে 100 Coins যোগ হবে।
-                    </div>
-
-                </div>
-
-            </div>
 
         </div>
 
-    </div>
+    </section>
 
 
     <!-- WALLET PAGE -->
+    <section id="walletPage" class="page">
 
-    <div
-        class="page hidden"
-        id="walletPage">
+        <h2 class="section-title">Wallet</h2>
 
-        <div class="section-card">
+        <p class="section-sub">
+            Your KOKO coin balance.
+        </p>
 
-            <h2 class="section-title">
-                Wallet
-            </h2>
+        <div class="wallet-card">
 
-            <p class="section-sub">
-                তোমার বর্তমান KOKO balance এখানে দেখতে পারবে।
-            </p>
+            <div class="wallet-icon">🪙</div>
 
-            <div class="balance-card">
-
-                <div class="balance-label">
-                    Available Coins
-                </div>
-
-                <div class="balance">
-                    🪙 <span id="walletScore">0</span>
-                </div>
-
+            <div class="wallet-balance">
+                <span id="walletCoins">0</span>
             </div>
 
-            <div class="info-row">
-
-                <div class="info-icon">
-
-                    <svg viewBox="0 0 24 24">
-
-                        <rect
-                            x="3"
-                            y="5"
-                            width="18"
-                            height="14"
-                            rx="3"/>
-
-                        <path
-                            d="M16 12h.01"/>
-
-                    </svg>
-
-                </div>
-
-                <div class="info-text">
-
-                    <div class="info-title">
-                        Coin Balance
-                    </div>
-
-                    <div class="info-desc">
-                        Matching Task থেকে Coins জমা হবে।
-                    </div>
-
-                </div>
-
-            </div>
+            <p>Available Coins</p>
 
         </div>
 
-    </div>
+    </section>
 
 </div>
 
 
-<!-- BOTTOM NAVIGATION -->
+<!-- BOTTOM NAV -->
 
 <div class="bottom-nav">
 
-    <div class="nav-inner">
+    <button id="navHome"
+            class="nav-item active"
+            onclick="showPage('home')">
+        <span class="nav-icon">⌂</span>
+        <span>Home</span>
+    </button>
 
-        <!-- HOME -->
+    <button id="navTask"
+            class="nav-item"
+            onclick="showPage('task')">
+        <span class="nav-icon">🎯</span>
+        <span>Task</span>
+    </button>
 
-        <button
-            class="nav-btn active"
-            data-page="home">
+    <button id="navInvite"
+            class="nav-item"
+            onclick="showPage('invite')">
+        <span class="nav-icon">👥</span>
+        <span>Invite</span>
+    </button>
 
-            <svg viewBox="0 0 24 24">
+    <button id="navAds"
+            class="nav-item"
+            onclick="showPage('ads')">
+        <span class="nav-icon">▶</span>
+        <span>Ads</span>
+    </button>
 
-                <path d="m3 10 9-7 9 7"/>
-
-                <path d="M5 9v11h14V9"/>
-
-                <path d="M9 20v-6h6v6"/>
-
-            </svg>
-
-            <span class="nav-label">
-                Home
-            </span>
-
-        </button>
-
-
-        <!-- TASK -->
-
-        <button
-            class="nav-btn"
-            data-page="task">
-
-            <svg viewBox="0 0 24 24">
-
-                <rect
-                    x="4"
-                    y="3"
-                    width="16"
-                    height="18"
-                    rx="3"/>
-
-                <path d="M8 8h8"/>
-
-                <path d="M8 12h2"/>
-
-                <path d="m8 16 2 2 5-5"/>
-
-            </svg>
-
-            <span class="nav-label">
-                Task
-            </span>
-
-        </button>
-
-
-        <!-- INVITE -->
-
-        <button
-            class="nav-btn"
-            data-page="invite">
-
-            <svg viewBox="0 0 24 24">
-
-                <circle
-                    cx="9"
-                    cy="7"
-                    r="4"/>
-
-                <path
-                    d="M2 21v-2a7 7 0 0 1 14 0v2"/>
-
-                <path
-                    d="M19 8v6"/>
-
-                <path
-                    d="M16 11h6"/>
-
-            </svg>
-
-            <span class="nav-label">
-                Invite
-            </span>
-
-        </button>
-
-
-        <!-- ADS -->
-
-        <button
-            class="nav-btn"
-            data-page="ads">
-
-            <svg viewBox="0 0 24 24">
-
-                <rect
-                    x="3"
-                    y="5"
-                    width="18"
-                    height="14"
-                    rx="3"/>
-
-                <path
-                    d="m10 9 5 3-5 3V9z"/>
-
-            </svg>
-
-            <span class="nav-label">
-                Ads
-            </span>
-
-        </button>
-
-
-        <!-- WALLET -->
-
-        <button
-            class="nav-btn"
-            data-page="wallet">
-
-            <svg viewBox="0 0 24 24">
-
-                <path
-                    d="M3 7h18v12H3z"/>
-
-                <path
-                    d="M3 7V5a2 2 0 0 1 2-2h13"/>
-
-                <path
-                    d="M16 13h5"/>
-
-                <circle
-                    cx="16"
-                    cy="13"
-                    r=".7"/>
-
-            </svg>
-
-            <span class="nav-label">
-                Wallet
-            </span>
-
-        </button>
-
-    </div>
+    <button id="navWallet"
+            class="nav-item"
+            onclick="showPage('wallet')">
+        <span class="nav-icon">💰</span>
+        <span>Wallet</span>
+    </button>
 
 </div>
 
 
 <!-- PROFILE POPUP -->
 
-<div
-    class="profile-overlay"
-    id="profileOverlay">
+<div id="profileOverlay"
+     class="profile-overlay"
+     onclick="closeProfile(event)">
 
-    <div class="profile-popup">
+    <div class="profile-popup"
+         onclick="event.stopPropagation()">
 
-        <div class="profile-avatar" id="profileAvatarContainer">
-            👤
+        <div class="profile-top">
+
+            <div id="profileAvatar"
+                 class="profile-avatar">
+                👤
+            </div>
+
+            <div>
+                <div id="profileName"
+                     class="profile-name">
+                    KOKO User
+                </div>
+
+                <div id="profileUsername"
+                     class="profile-username">
+                    Telegram User
+                </div>
+            </div>
+
         </div>
 
-        <div
-            class="popup-title"
-            id="profileName">
-
-            KOKO User
-
-        </div>
-
-        <div
-            class="popup-name"
-            id="profileUsername">
-
-            Telegram User
-
-        </div>
-
-        <button
-            class="close-profile"
-            id="closeProfile">
-
+        <button class="close-profile"
+                onclick="closeProfile()">
             Close
-
         </button>
 
     </div>
@@ -1562,578 +987,1559 @@ h1{
 
 
 <script>
-"use strict";
 
-let tgUser = null;
-let startParam = "";
-try {
-    if (window.Telegram && window.Telegram.WebApp) {
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        tgUser = tg.initDataUnsafe && tg.initDataUnsafe.user;
-        startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
-    }
-} catch (e) {
-    console.log("Telegram init error", e);
-}
-
-
-/* =========================================================
-   PAGE NAVIGATION
-========================================================= */
-
-const pages = {
-    home: document.getElementById("homePage"),
-    task: document.getElementById("taskPage"),
-    invite: document.getElementById("invitePage"),
-    ads: document.getElementById("adsPage"),
-    wallet: document.getElementById("walletPage")
-};
-
-const navButtons = document.querySelectorAll(".nav-btn");
-const homeMainCard = document.getElementById("homeMainCard");
-const homeGameScreen = document.getElementById("homeGameScreen");
-
-function showPage(pageName){
-    Object.keys(pages).forEach(function(key){
-        pages[key].classList.add("hidden");
-    });
-
-    if(pages[pageName]){
-        pages[pageName].classList.remove("hidden");
-    }
-
-    if(pageName !== "home"){
-        homeGameScreen.classList.add("hidden");
-        homeMainCard.classList.remove("hidden");
-    }
-
-    navButtons.forEach(function(button){
-        button.classList.remove("active");
-        if(button.dataset.page === pageName){
-            button.classList.add("active");
-        }
-    });
-
-    updateExtraUI();
-    window.scrollTo(0, 0);
-}
-
-navButtons.forEach(function(button){
-    button.addEventListener("click", function(e){
-        e.preventDefault();
-        homeGameScreen.classList.add("hidden");
-        homeMainCard.classList.remove("hidden");
-        showPage(button.dataset.page);
-    });
-});
-
-
-/* =========================================================
-   HOME → MATCHING GAME
-========================================================= */
-
-const goTaskBtn = document.getElementById("goTaskBtn");
-const gameBackBtn = document.getElementById("gameBackBtn");
-
-goTaskBtn.addEventListener("click", function(e){
-    e.preventDefault();
-    e.stopPropagation();
-
-    homeMainCard.classList.add("hidden");
-    homeGameScreen.classList.remove("hidden");
-
-    navButtons.forEach(function(button){
-        button.classList.remove("active");
-        if(button.dataset.page === "home"){
-            button.classList.add("active");
-        }
-    });
-
-    initGame();
-    window.scrollTo(0, 0);
-});
-
-gameBackBtn.addEventListener("click", function(e){
-    e.preventDefault();
-    e.stopPropagation();
-
-    homeGameScreen.classList.add("hidden");
-    homeMainCard.classList.remove("hidden");
-    showPage("home");
-});
-
-
-/* =========================================================
-   PER-USER DYNAMIC STORAGE & UNLIMITED REFERRAL LOGIC
-========================================================= */
+/* ==========================================
+   KOKO CONFIG
+========================================== */
 
 const TOTAL_TASKS = 10;
-const REWARD_PER_TASK = 100;
+const REWARD_PER_GAME = 100;
 
-// Unique Storage Key based on Telegram User ID so every account has its own score & progress
-let currentUserId = (tgUser && tgUser.id) ? String(tgUser.id) : "guest_user";
-const USER_SAVE_KEY = "koko_memory_match_user_" + currentUserId;
+const API_BASE = "";
 
-function loadUserProgress(){
-    let data = null;
-    try {
-        const raw = localStorage.getItem(USER_SAVE_KEY);
-        if(raw) {
-            data = JSON.parse(raw);
-        } else {
-            // Fallback to master key if specific user key doesn't exist yet
-            const masterRaw = localStorage.getItem("koko_memory_match_master_progress");
-            if(masterRaw) {
-                data = JSON.parse(masterRaw);
-            }
-        }
-    } catch(e){
-        data = {};
+
+/* ==========================================
+   TELEGRAM
+========================================== */
+
+let tg = null;
+let tgUser = null;
+let telegramInitData = "";
+let startParam = "";
+
+try {
+
+    if(
+        window.Telegram &&
+        window.Telegram.WebApp
+    ){
+
+        tg = window.Telegram.WebApp;
+
+        tg.ready();
+        tg.expand();
+
+        telegramInitData =
+            tg.initData || "";
+
+        tgUser =
+            tg.initDataUnsafe &&
+            tg.initDataUnsafe.user
+                ? tg.initDataUnsafe.user
+                : null;
+
+        startParam =
+            tg.initDataUnsafe &&
+            tg.initDataUnsafe.start_param
+                ? tg.initDataUnsafe.start_param
+                : "";
+
     }
 
-    return {
-        score: Number(data && data.score) || 0,
-        currentTask: Number(data && data.currentTask) || 0,
-        referralCount: Number(data && data.referralCount) || 0,
-        picClaimed: Boolean(data && data.picClaimed) || false,
-        usernameClaimed: Boolean(data && data.usernameClaimed) || false,
-        ref1Claimed: Boolean(data && data.ref1Claimed) || false,
-        ref2Claimed: Boolean(data && data.ref2Claimed) || false,
-        ref3Claimed: Boolean(data && data.ref3Claimed) || false,
-        ref4Claimed: Boolean(data && data.ref4Claimed) || false,
-        ref5Claimed: Boolean(data && data.ref5Claimed) || false
-    };
+}catch(error){
+
+    console.error(
+        "Telegram initialization error:",
+        error
+    );
+
 }
 
-let userProg = loadUserProgress();
 
-let score = userProg.score;
-let currentTask = userProg.currentTask;
-let referralCount = userProg.referralCount;
+/* ==========================================
+   STATE
+========================================== */
 
-let picClaimed = userProg.picClaimed;
-let usernameClaimed = userProg.usernameClaimed;
-let ref1Claimed = userProg.ref1Claimed;
-let ref2Claimed = userProg.ref2Claimed;
-let ref3Claimed = userProg.ref3Claimed;
-let ref4Claimed = userProg.ref4Claimed;
-let ref5Claimed = userProg.ref5Claimed;
+let score = 0;
+let currentTask = 0;
+let referralCount = 0;
 
-// Unlimited referral increment when entering via startParam (No device locks)
-try {
-    if(startParam && startParam.startsWith("ref_")) {
-        let refTargetId = startParam.replace("ref_", "");
-        // Prevent self-referral if user clicks their own link
-        if(refTargetId !== currentUserId) {
-            referralCount += 1;
-        }
-    }
-} catch(e) {}
+let picClaimed = false;
+let usernameClaimed = false;
 
-let board = [];
-let firstSelection = null;
-let secondSelection = null;
-let isChecking = false;
-let matchedCount = 0;
+let ref1Claimed = false;
+let ref2Claimed = false;
+let ref3Claimed = false;
+let ref4Claimed = false;
+let ref5Claimed = false;
+
+let serverUser = null;
+
+let loadingUser = false;
 let taskBusy = false;
 
-const grid = document.getElementById("puzzleGrid");
-const message = document.getElementById("message");
-const scoreElement = document.getElementById("score");
-const tasksElement = document.getElementById("tasksCount");
+let inviteLink = "";
 
-const emojiPool = [
-    ["🍎", "🍌", "🍇", "🍊", "🍉", "🍓", "🥝", "🍒"],
-    ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼"],
-    ["⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🥎", "🏆"],
-    ["🚗", "🚕", "🚙", "🚌", "🏎️", "🚓", "🚑", "🚒"],
-    ["😀", "😂", "😍", "😎", "🤩", "🥳", "😇", "🤗"]
-];
 
-function saveProgress(){
+/* ==========================================
+   API REQUEST
+========================================== */
+
+async function apiRequest(
+    endpoint,
+    options = {}
+){
+
+    const headers = {
+        "Content-Type":
+            "application/json"
+    };
+
+    if(telegramInitData){
+
+        headers[
+            "X-Telegram-Init-Data"
+        ] = telegramInitData;
+
+    }
+
+    const finalOptions = {
+
+        ...options,
+
+        headers:{
+            ...headers,
+            ...(options.headers || {})
+        }
+
+    };
+
+    const response =
+        await fetch(
+            API_BASE + endpoint,
+            finalOptions
+        );
+
+    let data = {};
+
     try{
-        const payload = JSON.stringify({
-            score: score,
-            currentTask: currentTask,
-            referralCount: referralCount,
-            picClaimed: picClaimed,
-            usernameClaimed: usernameClaimed,
-            ref1Claimed: ref1Claimed,
-            ref2Claimed: ref2Claimed,
-            ref3Claimed: ref3Claimed,
-            ref4Claimed: ref4Claimed,
-            ref5Claimed: ref5Claimed
-        });
-        localStorage.setItem(USER_SAVE_KEY, payload);
-        localStorage.setItem("koko_memory_match_master_progress", payload);
+
+        data =
+            await response.json();
+
     }catch(error){
-        console.log("Could not save progress", error);
-    }
-}
 
-function updateUI(){
-    scoreElement.textContent = score;
-    tasksElement.textContent = currentTask;
-    updateExtraUI();
-    updateTaskUI();
-}
+        data = {};
 
-function updateExtraUI(){
-    const homeScore = document.getElementById("homeScore");
-    const homeTasks = document.getElementById("homeTasks");
-    const walletScore = document.getElementById("walletScore");
-
-    if(homeScore) homeScore.textContent = score;
-    if(homeTasks) homeTasks.textContent = currentTask + "/10";
-    if(walletScore) walletScore.textContent = score;
-}
-
-function updateTaskUI(){
-    const picBtn = document.getElementById("claimPicBtn");
-    const userBtn = document.getElementById("claimUsernameBtn");
-    const ref1Btn = document.getElementById("claimRef1Btn");
-    const ref2Btn = document.getElementById("claimRef2Btn");
-    const ref3Btn = document.getElementById("claimRef3Btn");
-    const ref4Btn = document.getElementById("claimRef4Btn");
-    const ref5Btn = document.getElementById("claimRef5Btn");
-
-    let hasProfilePic = tgUser && tgUser.photo_url;
-    if(picClaimed){
-        picBtn.textContent = "Claimed ✓";
-        picBtn.disabled = true;
-    } else {
-        picBtn.disabled = !hasProfilePic;
     }
 
-    const usernameInput = document.getElementById("usernameInput");
-    if(usernameClaimed){
-        userBtn.textContent = "Claimed ✓";
-        userBtn.disabled = true;
-    } else {
-        let hasUsername = (tgUser && tgUser.username) || (usernameInput && usernameInput.value.trim().length > 0);
-        userBtn.disabled = !hasUsername;
+    if(!response.ok){
+
+        throw new Error(
+            data.error ||
+            "Server request failed"
+        );
+
     }
 
-    ref1Claimed ? (ref1Btn.textContent = "Claimed ✓", ref1Btn.disabled = true) : (ref1Btn.disabled = referralCount < 1);
-    ref2Claimed ? (ref2Btn.textContent = "Claimed ✓", ref2Btn.disabled = true) : (ref2Btn.disabled = referralCount < 2);
-    ref3Claimed ? (ref3Btn.textContent = "Claimed ✓", ref3Btn.disabled = true) : (ref3Btn.disabled = referralCount < 3);
-    ref4Claimed ? (ref4Btn.textContent = "Claimed ✓", ref4Btn.disabled = true) : (ref4Btn.disabled = referralCount < 4);
-    ref5Claimed ? (ref5Btn.textContent = "Claimed ✓", ref5Btn.disabled = true) : (ref5Btn.disabled = referralCount < 5);
-}
+    return data;
 
-function checkUsernameInput(){
-    updateTaskUI();
 }
 
 
-/* =========================================================
-   MONETAG REWARDED AD SDK WRAPPER (GUARANTEED REWARD)
-========================================================= */
+/* ==========================================
+   APPLY SERVER USER
+========================================== */
+
+function applyUserData(user){
+
+    if(!user) return;
+
+    serverUser = user;
+
+    score =
+        Number(
+            user.coins || 0
+        );
+
+    currentTask =
+        Number(
+            user.completedTasks || 0
+        );
+
+    referralCount =
+        Number(
+            user.referralCount || 0
+        );
+
+    picClaimed =
+        Boolean(
+            user.picClaimed
+        );
+
+    usernameClaimed =
+        Boolean(
+            user.usernameClaimed
+        );
+
+    ref1Claimed =
+        Boolean(
+            user.ref1Claimed
+        );
+
+    ref2Claimed =
+        Boolean(
+            user.ref2Claimed
+        );
+
+    ref3Claimed =
+        Boolean(
+            user.ref3Claimed
+        );
+
+    ref4Claimed =
+        Boolean(
+            user.ref4Claimed
+        );
+
+    ref5Claimed =
+        Boolean(
+            user.ref5Claimed
+        );
+
+    updateUI();
+
+}
+
+
+/* ==========================================
+   LOAD USER
+========================================== */
+
+async function loadUserFromServer(){
+
+    if(!telegramInitData){
+
+        console.log(
+            "Telegram initData missing."
+        );
+
+        return null;
+
+    }
+
+    try{
+
+        loadingUser = true;
+
+        const result =
+            await apiRequest(
+                "/api/user",
+                {
+                    method:"POST",
+                    body:JSON.stringify({})
+                }
+            );
+
+        if(result.user){
+
+            applyUserData(
+                result.user
+            );
+
+        }
+
+        return result.user || null;
+
+    }catch(error){
+
+        console.error(
+            "Load user error:",
+            error
+        );
+
+        return null;
+
+    }finally{
+
+        loadingUser = false;
+
+    }
+
+}
+
+
+/* ==========================================
+   REFRESH USER
+========================================== */
+
+async function refreshUser(){
+
+    return await loadUserFromServer();
+
+}
+
+
+/* ==========================================
+   REFERRAL
+========================================== */
+
+async function processReferral(){
+
+    if(!telegramInitData) return;
+
+    if(!startParam) return;
+
+    if(
+        !startParam.startsWith(
+            "ref_"
+        )
+    ){
+
+        return;
+
+    }
+
+    try{
+
+        const result =
+            await apiRequest(
+                "/api/referral",
+                {
+                    method:"POST",
+
+                    body:JSON.stringify({
+
+                        startParam:
+                            startParam
+
+                    })
+
+                }
+            );
+
+        console.log(
+            "Referral result:",
+            result
+        );
+
+        if(result.user){
+
+            applyUserData(
+                result.user
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Referral error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ==========================================
+   MONETAG AD
+========================================== */
 
 function showRewardedAd(){
-    return new Promise(function(resolve){
-        if(typeof window.show_11926774 !== "function"){
-            resolve();
-            return;
-        }
-        try{
-            const adResult = window.show_11926774();
-            if(adResult && typeof adResult.then === "function"){
-                adResult.then(function(){
-                    resolve();
-                }).catch(function(){
-                    resolve();
-                });
-            } else {
-                resolve();
+
+    return new Promise(
+        function(resolve,reject){
+
+            if(
+                typeof window.show_11926774 !==
+                "function"
+            ){
+
+                reject(
+                    new Error(
+                        "Rewarded ad is not available."
+                    )
+                );
+
+                return;
+
             }
-        }catch(error){
-            resolve();
+
+            try{
+
+                const adResult =
+                    window.show_11926774();
+
+                if(
+                    adResult &&
+                    typeof adResult.then ===
+                    "function"
+                ){
+
+                    adResult
+                        .then(function(){
+
+                            resolve();
+
+                        })
+                        .catch(function(error){
+
+                            reject(error);
+
+                        });
+
+                }else{
+
+                    reject(
+                        new Error(
+                            "Ad did not start."
+                        )
+                    );
+
+                }
+
+            }catch(error){
+
+                reject(error);
+
+            }
+
         }
-    });
+    );
+
 }
 
 
-/* =========================================================
-   TASK CLAIM WITH AD INTEGRATION
-========================================================= */
+/* ==========================================
+   CLAIM TASK
+========================================== */
 
-function processTaskClaim(taskType){
-    showRewardedAd().then(function(){
-        if(taskType === 'pic' && !picClaimed){
-            score += 100;
-            picClaimed = true;
-            alert("Success! +100 Coins added for Profile Picture!");
-        } else if(taskType === 'username' && !usernameClaimed){
-            score += 100;
-            usernameClaimed = true;
-            alert("Success! +100 Coins added for Username!");
-        } else if(taskType === 'ref1' && !ref1Claimed && referralCount >= 1){
-            score += 100;
-            ref1Claimed = true;
-            alert("Success! +100 Coins added for 1 Referral!");
-        } else if(taskType === 'ref2' && !ref2Claimed && referralCount >= 2){
-            score += 200;
-            ref2Claimed = true;
-            alert("Success! +200 Coins added for 2 Referrals!");
-        } else if(taskType === 'ref3' && !ref3Claimed && referralCount >= 3){
-            score += 300;
-            ref3Claimed = true;
-            alert("Success! +300 Coins added for 3 Referrals!");
-        } else if(taskType === 'ref4' && !ref4Claimed && referralCount >= 4){
-            score += 400;
-            ref4Claimed = true;
-            alert("Success! +400 Coins added for 4 Referrals!");
-        } else if(taskType === 'ref5' && !ref5Claimed && referralCount >= 5){
-            score += 500;
-            ref5Claimed = true;
-            alert("Success! +500 Coins added for 5 Referrals!");
-        }
-        saveProgress();
-        updateUI();
-    });
-}
+async function processTaskClaim(
+    taskType
+){
 
+    if(loadingUser){
 
-/* =========================================================
-   SHUFFLE & GAME
-========================================================= */
+        alert(
+            "Please wait..."
+        );
 
-function shuffle(array){
-    const arr = [...array];
-    for(let i = arr.length - 1; i > 0; i--){
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        return;
+
     }
-    return arr;
+
+    try{
+
+        const latestUser =
+            await refreshUser();
+
+        if(!latestUser){
+
+            alert(
+                "Server connection error."
+            );
+
+            return;
+
+        }
+
+
+        /* Requirement check */
+
+        if(
+            taskType === "ref1" &&
+            referralCount < 1
+        ){
+
+            alert(
+                "Invite 1 friend first."
+            );
+
+            return;
+
+        }
+
+        if(
+            taskType === "ref2" &&
+            referralCount < 2
+        ){
+
+            alert(
+                "Invite 2 friends first."
+            );
+
+            return;
+
+        }
+
+        if(
+            taskType === "ref3" &&
+            referralCount < 3
+        ){
+
+            alert(
+                "Invite 3 friends first."
+            );
+
+            return;
+
+        }
+
+        if(
+            taskType === "ref4" &&
+            referralCount < 4
+        ){
+
+            alert(
+                "Invite 4 friends first."
+            );
+
+            return;
+
+        }
+
+        if(
+            taskType === "ref5" &&
+            referralCount < 5
+        ){
+
+            alert(
+                "Invite 5 friends first."
+            );
+
+            return;
+
+        }
+
+
+        /* Show ad first */
+
+        try{
+
+            await showRewardedAd();
+
+        }catch(adError){
+
+            console.error(
+                "Ad error:",
+                adError
+            );
+
+            alert(
+                "Rewarded ad could not be completed. Reward দেওয়া হয়নি."
+            );
+
+            return;
+
+        }
+
+
+        /* Claim from server */
+
+        const result =
+            await apiRequest(
+                "/api/claim-task",
+                {
+                    method:"POST",
+
+                    body:JSON.stringify({
+                        task:taskType
+                    })
+
+                }
+            );
+
+
+        if(result.user){
+
+            applyUserData(
+                result.user
+            );
+
+        }
+
+
+        if(result.claimed){
+
+            alert(
+                "Success! +" +
+                result.reward +
+                " Coins added!"
+            );
+
+        }else{
+
+            alert(
+                result.error ||
+                "Task already claimed or requirement not completed."
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Task claim error:",
+            error
+        );
+
+        alert(
+            "Server error. Reward দেওয়া হয়নি।"
+        );
+
+    }
+
 }
+
+
+/* ==========================================
+   GAME
+========================================== */
+
+const emojis = [
+    "🍎",
+    "🍌",
+    "🍇",
+    "🍉",
+    "🍒",
+    "🥝",
+    "🍍",
+    "🥭"
+];
+
+let cards = [];
+let firstCard = null;
+let secondCard = null;
+let lockBoard = false;
+let matchedPairs = 0;
+
+
+function startMatching(){
+
+    showPage(
+        "game"
+    );
+
+    initGame();
+
+}
+
 
 function initGame(){
-    if(currentTask >= TOTAL_TASKS){
-        grid.innerHTML = "";
-        message.className = "success";
-        message.textContent = "🏆 সব ১০টি Task সম্পূর্ণ হয়েছে! মোট Coins: " + score;
-        updateUI();
-        return;
-    }
 
-    firstSelection = null;
-    secondSelection = null;
-    isChecking = false;
-    matchedCount = 0;
+    cards = [
+        ...emojis,
+        ...emojis
+    ];
+
+    cards.sort(
+        () => Math.random() - 0.5
+    );
+
+    firstCard = null;
+    secondCard = null;
+
+    lockBoard = false;
+
+    matchedPairs = 0;
+
     taskBusy = false;
 
-    message.className = "";
-    message.textContent = "সব জোড়া মিলাও।";
+    const grid =
+        document.getElementById(
+            "gameGrid"
+        );
 
-    const set = emojiPool[Math.floor(Math.random() * emojiPool.length)];
-    board = shuffle([...set, ...set]);
-    renderBoard();
-}
+    const message =
+        document.getElementById(
+            "gameMessage"
+        );
 
-function renderBoard(){
+    const taskNumber =
+        Math.min(
+            currentTask + 1,
+            TOTAL_TASKS
+        );
+
+    document.getElementById(
+        "gameTaskNumber"
+    ).textContent =
+        taskNumber;
+
     grid.innerHTML = "";
-    board.forEach(function(icon, index){
-        const tile = document.createElement("div");
-        tile.className = "puzzle-tile";
-        tile.id = "tile-" + index;
-        tile.textContent = "❓";
-        tile.setAttribute("role", "button");
-        tile.setAttribute("aria-label", "Memory card");
 
-        tile.addEventListener("click", function(){
-            handleTileClick(index);
-        });
+    message.className =
+        "message";
 
-        grid.appendChild(tile);
-    });
-}
+    message.textContent =
+        "Find all 8 pairs to complete this task.";
 
-function handleTileClick(index){
-    if(isChecking || taskBusy) return;
 
-    const tile = document.getElementById("tile-" + index);
-    if(!tile || tile.classList.contains("flipped") || tile.classList.contains("matched")) return;
+    cards.forEach(
+        function(emoji,index){
 
-    const icon = board[index];
-    tile.textContent = icon;
-    tile.classList.add("flipped");
+            const card =
+                document.createElement(
+                    "div"
+                );
 
-    if(firstSelection === null){
-        firstSelection = { index: index, icon: icon };
-        return;
-    }
+            card.className =
+                "card";
 
-    secondSelection = { index: index, icon: icon };
-    isChecking = true;
+            card.dataset.value =
+                emoji;
 
-    if(firstSelection.icon === secondSelection.icon && firstSelection.index !== secondSelection.index){
-        const firstTile = document.getElementById("tile-" + firstSelection.index);
-        const secondTile = document.getElementById("tile-" + secondSelection.index);
+            card.innerHTML = `
 
-        if(firstTile) firstTile.classList.add("matched");
-        if(secondTile) secondTile.classList.add("matched");
+                <div class="card-inner">
 
-        matchedCount += 2;
-        resetSelections();
+                    <div class="card-front">
+                        ?
+                    </div>
 
-        if(matchedCount === 16){
-            finishTask();
+                    <div class="card-back">
+                        ${emoji}
+                    </div>
+
+                </div>
+
+            `;
+
+            card.addEventListener(
+                "click",
+                function(){
+
+                    flipCard(card);
+
+                }
+            );
+
+            grid.appendChild(
+                card
+            );
+
         }
-    }else{
-        const a = firstSelection.index;
-        const b = secondSelection.index;
+    );
 
-        setTimeout(function(){
-            const tileA = document.getElementById("tile-" + a);
-            const tileB = document.getElementById("tile-" + b);
+}
 
-            if(tileA){
-                tileA.textContent = "❓";
-                tileA.classList.remove("flipped");
-            }
-            if(tileB){
-                tileB.textContent = "❓";
-                tileB.classList.remove("flipped");
-            }
-            resetSelections();
-        }, 800);
+
+function flipCard(card){
+
+    if(lockBoard) return;
+
+    if(
+        card === firstCard
+    ){
+
+        return;
+
     }
+
+    if(
+        card.classList.contains(
+            "matched"
+        )
+    ){
+
+        return;
+
+    }
+
+    card.classList.add(
+        "flipped"
+    );
+
+
+    if(!firstCard){
+
+        firstCard = card;
+
+        return;
+
+    }
+
+
+    secondCard = card;
+
+    checkMatch();
+
 }
 
-function resetSelections(){
-    firstSelection = null;
-    secondSelection = null;
-    isChecking = false;
+
+function checkMatch(){
+
+    const isMatch =
+        firstCard.dataset.value ===
+        secondCard.dataset.value;
+
+
+    if(isMatch){
+
+        disableCards();
+
+    }else{
+
+        unflipCards();
+
+    }
+
 }
 
-function finishTask(){
+
+function disableCards(){
+
+    firstCard.classList.add(
+        "matched"
+    );
+
+    secondCard.classList.add(
+        "matched"
+    );
+
+    matchedPairs++;
+
+    resetBoard();
+
+
+    if(
+        matchedPairs ===
+        emojis.length
+    ){
+
+        setTimeout(
+            finishTask,
+            500
+        );
+
+    }
+
+}
+
+
+function unflipCards(){
+
+    lockBoard = true;
+
+    setTimeout(
+        function(){
+
+            firstCard.classList.remove(
+                "flipped"
+            );
+
+            secondCard.classList.remove(
+                "flipped"
+            );
+
+            resetBoard();
+
+        },
+        650
+    );
+
+}
+
+
+function resetBoard(){
+
+    [
+        firstCard,
+        secondCard
+    ] = [
+        null,
+        null
+    ];
+
+    lockBoard = false;
+
+}
+
+
+/* ==========================================
+   COMPLETE GAME TASK
+========================================== */
+
+async function finishTask(){
+
     if(taskBusy) return;
+
     taskBusy = true;
 
-    message.className = "info";
-    message.textContent = "🎉 Task Complete! Rewarded Ad চালু হচ্ছে...";
+    const message =
+        document.getElementById(
+            "gameMessage"
+        );
 
-    showRewardedAd().then(function(){
-        score += REWARD_PER_TASK;
-        currentTask += 1;
-        saveProgress();
-        updateUI();
+    message.className =
+        "message info";
 
-        message.className = "success";
-        message.textContent = "🎉 Ad সম্পূর্ণ হয়েছে! +100 Coins যোগ হয়েছে।";
+    message.textContent =
+        "🎉 Task Complete! Rewarded Ad চালু হচ্ছে...";
 
-        if(currentTask >= TOTAL_TASKS){
-            setTimeout(function(){
-                grid.innerHTML = "";
-                message.className = "success";
-                message.textContent = "🏆 অভিনন্দন! সব ১০টি Task সম্পূর্ণ হয়েছে। মোট Coins: " + score;
-                updateUI();
-            }, 1200);
+
+    try{
+
+        /* Ad first */
+
+        try{
+
+            await showRewardedAd();
+
+        }catch(adError){
+
+            console.error(
+                "Game ad error:",
+                adError
+            );
+
+            message.className =
+                "message error";
+
+            message.textContent =
+                "❌ Ad complete হয়নি। Reward দেওয়া হয়নি।";
+
+            taskBusy = false;
+
             return;
+
         }
 
-        setTimeout(function(){
-            initGame();
-        }, 1200);
-    });
+
+        /* Server reward */
+
+        const result =
+            await apiRequest(
+                "/api/game-complete",
+                {
+                    method:"POST",
+
+                    body:JSON.stringify({})
+                }
+            );
+
+
+        if(!result.ok){
+
+            throw new Error(
+                result.error ||
+                "Game reward failed"
+            );
+
+        }
+
+
+        if(result.user){
+
+            applyUserData(
+                result.user
+            );
+
+        }
+
+
+        if(result.rewarded){
+
+            message.className =
+                "message success";
+
+            message.textContent =
+                "🎉 Ad সম্পূর্ণ হয়েছে! +100 Coins যোগ হয়েছে.";
+
+        }else{
+
+            message.className =
+                "message info";
+
+            message.textContent =
+                "এই Game Task-এর reward আর দেওয়া যাবে না.";
+
+        }
+
+
+        if(
+            currentTask >=
+            TOTAL_TASKS
+        ){
+
+            setTimeout(
+                function(){
+
+                    const grid =
+                        document.getElementById(
+                            "gameGrid"
+                        );
+
+                    grid.innerHTML = "";
+
+                    message.className =
+                        "message success";
+
+                    message.textContent =
+                        "🏆 অভিনন্দন! সব ১০টি Task সম্পূর্ণ হয়েছে। মোট Coins: " +
+                        score;
+
+                    updateUI();
+
+                    taskBusy = false;
+
+                },
+                1200
+            );
+
+            return;
+
+        }
+
+
+        setTimeout(
+            function(){
+
+                initGame();
+
+            },
+            1200
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Game completion error:",
+            error
+        );
+
+        message.className =
+            "message error";
+
+        message.textContent =
+            "❌ Reward পাওয়া যায়নি। Server connection check করো.";
+
+        taskBusy = false;
+
+    }
+
 }
 
 
-/* =========================================================
-   PROFILE & INVITE SYSTEM
-========================================================= */
+/* ==========================================
+   PAGE NAVIGATION
+========================================== */
 
-const profileBtn = document.getElementById("profileBtn");
-const profileOverlay = document.getElementById("profileOverlay");
-const closeProfile = document.getElementById("closeProfile");
+function showPage(page){
 
-profileBtn.addEventListener("click", function(){
-    profileOverlay.classList.add("show");
-});
+    const pages = [
+        "home",
+        "task",
+        "game",
+        "invite",
+        "ads",
+        "wallet"
+    ];
 
-closeProfile.addEventListener("click", function(){
-    profileOverlay.classList.remove("show");
-});
 
-profileOverlay.addEventListener("click", function(event){
-    if(event.target === profileOverlay){
-        profileOverlay.classList.remove("show");
-    }
-});
+    pages.forEach(
+        function(name){
 
-try{
-    if(tgUser){
-        const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ");
-        const username = tgUser.username ? "@" + tgUser.username : "Telegram User";
-        if(name){
-            document.getElementById("profileName").textContent = name;
+            const element =
+                document.getElementById(
+                    name + "Page"
+                );
+
+            if(element){
+
+                element.classList.remove(
+                    "active"
+                );
+
+            }
+
         }
-        document.getElementById("profileUsername").textContent = username;
+    );
 
-        if(tgUser.photo_url){
-            const avatarContainer = document.getElementById("profileAvatarContainer");
-            avatarContainer.innerHTML = `<img src="${tgUser.photo_url}" alt="Profile" style="width:50px;height:50px;border-radius:50%;object-fit:cover;">`;
-        }
+
+    const target =
+        document.getElementById(
+            page + "Page"
+        );
+
+    if(target){
+
+        target.classList.add(
+            "active"
+        );
+
     }
-}catch(error){
-    console.log("Telegram profile unavailable");
+
+
+    document
+        .querySelectorAll(
+            ".nav-item"
+        )
+        .forEach(
+            function(item){
+
+                item.classList.remove(
+                    "active"
+                );
+
+            }
+        );
+
+
+    const nav =
+        document.getElementById(
+            "nav" +
+            page.charAt(0).toUpperCase() +
+            page.slice(1)
+        );
+
+    if(nav){
+
+        nav.classList.add(
+            "active"
+        );
+
+    }
+
 }
+
+
+/* ==========================================
+   UI
+========================================== */
+
+function updateUI(){
+
+    document.getElementById(
+        "homeCoins"
+    ).textContent =
+        score;
+
+    document.getElementById(
+        "walletCoins"
+    ).textContent =
+        score;
+
+    document.getElementById(
+        "homeTasks"
+    ).textContent =
+        currentTask +
+        "/" +
+        TOTAL_TASKS;
+
+    document.getElementById(
+        "referralCount"
+    ).textContent =
+        referralCount;
+
+
+    updateTaskButtons();
+
+    updateProfileUI();
+
+}
+
+
+function updateTaskButtons(){
+
+    setTaskButton(
+        "picTaskBtn",
+        picClaimed
+    );
+
+    setTaskButton(
+        "usernameTaskBtn",
+        usernameClaimed
+    );
+
+    setTaskButton(
+        "ref1TaskBtn",
+        ref1Claimed,
+        referralCount >= 1
+    );
+
+    setTaskButton(
+        "ref2TaskBtn",
+        ref2Claimed,
+        referralCount >= 2
+    );
+
+    setTaskButton(
+        "ref3TaskBtn",
+        ref3Claimed,
+        referralCount >= 3
+    );
+
+    setTaskButton(
+        "ref4TaskBtn",
+        ref4Claimed,
+        referralCount >= 4
+    );
+
+    setTaskButton(
+        "ref5TaskBtn",
+        ref5Claimed,
+        referralCount >= 5
+    );
+
+}
+
+
+function setTaskButton(
+    id,
+    claimed,
+    unlocked = true
+){
+
+    const button =
+        document.getElementById(
+            id
+        );
+
+    if(!button) return;
+
+
+    if(claimed){
+
+        button.textContent =
+            "✓ Done";
+
+        button.classList.add(
+            "done"
+        );
+
+        button.disabled = true;
+
+        return;
+
+    }
+
+
+    button.classList.remove(
+        "done"
+    );
+
+    button.disabled =
+        !unlocked;
+
+    button.textContent =
+        unlocked
+            ? "Claim"
+            : "Locked";
+
+}
+
+
+/* ==========================================
+   PROFILE
+========================================== */
+
+function updateProfileUI(){
+
+    const name =
+        tgUser
+            ? (
+                (
+                    tgUser.first_name ||
+                    ""
+                ) +
+                " " +
+                (
+                    tgUser.last_name ||
+                    ""
+                )
+            ).trim()
+            : "KOKO User";
+
+
+    const username =
+        tgUser &&
+        tgUser.username
+            ? "@" + tgUser.username
+            : "Telegram User";
+
+
+    document.getElementById(
+        "profileName"
+    ).textContent =
+        name || "KOKO User";
+
+
+    document.getElementById(
+        "profileUsername"
+    ).textContent =
+        username;
+
+
+    const avatar =
+        document.getElementById(
+            "profileAvatar"
+        );
+
+
+    if(
+        tgUser &&
+        tgUser.photo_url
+    ){
+
+        avatar.innerHTML =
+            `<img src="${tgUser.photo_url}"
+                  style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+
+    }else{
+
+        avatar.textContent =
+            "👤";
+
+    }
+
+}
+
+
+function openProfile(){
+
+    document
+        .getElementById(
+            "profileOverlay"
+        )
+        .classList.add(
+            "show"
+        );
+
+}
+
+
+function closeProfile(event){
+
+    if(
+        event &&
+        event.target !==
+        document.getElementById(
+            "profileOverlay"
+        )
+    ){
+
+        return;
+
+    }
+
+    document
+        .getElementById(
+            "profileOverlay"
+        )
+        .classList.remove(
+            "show"
+        );
+
+}
+
+
+/* ==========================================
+   REFERRAL LINK
+========================================== */
 
 function getInviteLink(){
-    let userId = "user";
-    try{
-        if(tgUser && tgUser.id){
-            userId = tgUser.id;
-        }
-    }catch(error){
-        userId = "user";
+
+    let userId =
+        tgUser &&
+        tgUser.id
+            ? String(tgUser.id)
+            : "";
+
+    if(!userId){
+
+        return "Open KOKO from Telegram";
+
     }
-    return "https://t.me/koko_mini_bot?start=" + encodeURIComponent("ref_" + userId);
+
+
+    return (
+        "https://t.me/koko_mini_bot?start=ref_" +
+        userId
+    );
+
 }
 
-const inviteLinkElement = document.getElementById("inviteLink");
-const inviteLink = getInviteLink();
-inviteLinkElement.textContent = inviteLink;
 
-document.getElementById("copyInviteBtn").addEventListener("click", async function(){
-    try{
-        await navigator.clipboard.writeText(inviteLink);
-        this.textContent = "✓ Copied!";
-        setTimeout(()=>{ this.textContent = "Copy Invite Link"; }, 1500);
-    }catch(error){
-        alert("Copy করা যায়নি।");
+function copyInviteLink(){
+
+    if(!inviteLink){
+
+        inviteLink =
+            getInviteLink();
+
     }
-});
 
-document.getElementById("shareInviteBtn").addEventListener("click", async function(){
-    try{
-        if(navigator.share){
-            await navigator.share({
-                title: "KOKO Mini App",
-                text: "Join KOKO Mini App",
-                url: inviteLink
-            });
-        }else{
-            await navigator.clipboard.writeText(inviteLink);
-            alert("Invite link copied!");
-        }
-    }catch(error){
-        console.log("Share cancelled");
+
+    if(
+        navigator.clipboard &&
+        navigator.clipboard.writeText
+    ){
+
+        navigator.clipboard
+            .writeText(
+                inviteLink
+            )
+            .then(
+                function(){
+
+                    alert(
+                        "Referral link copied!"
+                    );
+
+                }
+            )
+            .catch(
+                function(){
+
+                    alert(
+                        inviteLink
+                    );
+
+                }
+            );
+
+    }else{
+
+        alert(
+            inviteLink
+        );
+
     }
-});
+
+}
 
 
-/* =========================================================
+function shareInviteLink(){
+
+    if(!inviteLink){
+
+        inviteLink =
+            getInviteLink();
+
+    }
+
+
+    const shareText =
+        "Join KOKO Memory Match and earn coins! 🎮🪙";
+
+
+    if(
+        tg &&
+        tg.openTelegramLink
+    ){
+
+        const url =
+            "https://t.me/share/url?url=" +
+            encodeURIComponent(
+                inviteLink
+            ) +
+            "&text=" +
+            encodeURIComponent(
+                shareText
+            );
+
+        tg.openTelegramLink(
+            url
+        );
+
+        return;
+
+    }
+
+
+    if(
+        navigator.share
+    ){
+
+        navigator.share({
+
+            title:"KOKO Memory Match",
+
+            text:shareText,
+
+            url:inviteLink
+
+        }).catch(
+            function(){}
+        );
+
+        return;
+
+    }
+
+
+    copyInviteLink();
+
+}
+
+
+/* ==========================================
    INITIALIZE
-========================================================= */
+========================================== */
 
-updateUI();
-showPage("home");
+async function initializeKoko(){
+
+    updateUI();
+
+    showPage(
+        "home"
+    );
+
+
+    inviteLink =
+        getInviteLink();
+
+    document.getElementById(
+        "inviteLink"
+    ).textContent =
+        inviteLink;
+
+
+    if(telegramInitData){
+
+        await loadUserFromServer();
+
+        await processReferral();
+
+        await refreshUser();
+
+    }else{
+
+        /*
+         * KOKO should normally be opened
+         * from Telegram.
+         *
+         * No localStorage balance is used.
+         * This prevents old users/old data
+         * from mixing together.
+         */
+
+        score = 0;
+        currentTask = 0;
+        referralCount = 0;
+
+        updateUI();
+
+        console.log(
+            "Open KOKO from Telegram for account features."
+        );
+
+    }
+
+
+    inviteLink =
+        getInviteLink();
+
+    document.getElementById(
+        "inviteLink"
+    ).textContent =
+        inviteLink;
+
+
+    updateUI();
+
+}
+
+
+/* START */
+
+initializeKoko();
 
 </script>
 
 </body>
-                              </html>
+</html>
