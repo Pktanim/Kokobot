@@ -588,15 +588,7 @@ h1{
 }
 
 /* =========================
-   EMPTY TASK PAGE
-========================= */
-
-#taskPage{
-    min-height:300px;
-}
-
-/* =========================
-   BOTTOM NAVIGATION
+   BOTTOM NAVIGATION (4 items now)
 ========================= */
 
 .bottom-nav{
@@ -635,7 +627,7 @@ h1{
     display:grid;
 
     grid-template-columns:
-        repeat(5,1fr);
+        repeat(4,1fr);
 
     gap:3px;
 }
@@ -982,14 +974,6 @@ h1{
     </div>
 
 
-    <!-- TASK PAGE -->
-
-    <div
-        class="page hidden"
-        id="taskPage">
-    </div>
-
-
     <!-- INVITE PAGE -->
 
     <div
@@ -1258,36 +1242,6 @@ h1{
         </button>
 
 
-        <!-- TASK -->
-
-        <button
-            class="nav-btn"
-            data-page="task">
-
-            <svg viewBox="0 0 24 24">
-
-                <rect
-                    x="4"
-                    y="3"
-                    width="16"
-                    height="18"
-                    rx="3"/>
-
-                <path d="M8 8h8"/>
-
-                <path d="M8 12h2"/>
-
-                <path d="m8 16 2 2 5-5"/>
-
-            </svg>
-
-            <span class="nav-label">
-                Task
-            </span>
-
-        </button>
-
-
         <!-- INVITE -->
 
         <button
@@ -1425,7 +1379,7 @@ h1{
 <script>
 "use strict";
 
-/* Telegram WebApp Initialization */
+/* Telegram WebApp Initialization & Safe Guard */
 try {
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
@@ -1443,7 +1397,6 @@ try {
 
 const pages = {
     home: document.getElementById("homePage"),
-    task: document.getElementById("taskPage"),
     invite: document.getElementById("invitePage"),
     ads: document.getElementById("adsPage"),
     wallet: document.getElementById("walletPage")
@@ -1486,6 +1439,10 @@ function showPage(pageName){
 navButtons.forEach(function(button){
     button.addEventListener("click", function(e){
         e.preventDefault();
+        
+        homeGameScreen.classList.add("hidden");
+        homeMainCard.classList.remove("hidden");
+
         showPage(button.dataset.page);
     });
 });
@@ -1500,6 +1457,7 @@ const gameBackBtn = document.getElementById("gameBackBtn");
 
 goTaskBtn.addEventListener("click", function(e){
     e.preventDefault();
+    e.stopPropagation();
 
     homeMainCard.classList.add("hidden");
     homeGameScreen.classList.remove("hidden");
@@ -1522,6 +1480,7 @@ goTaskBtn.addEventListener("click", function(e){
 
 gameBackBtn.addEventListener("click", function(e){
     e.preventDefault();
+    e.stopPropagation();
 
     homeGameScreen.classList.add("hidden");
     homeMainCard.classList.remove("hidden");
@@ -1853,4 +1812,4 @@ showPage("home");
 </script>
 
 </body>
-</html>
+      </html>
