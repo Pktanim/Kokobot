@@ -632,8 +632,9 @@ h1{
 }
 
 .task-btn:disabled{
-    background:#059669;
-    cursor:default;
+    background:#475569;
+    color:#94a3b8;
+    cursor:not-allowed;
 }
 
 .task-input-group{
@@ -1055,45 +1056,72 @@ h1{
                 Complete tasks to earn extra coins.
             </p>
 
-            <!-- Task 1: Profile Picture -->
+            <!-- 1. Add Profile Picture -->
             <div class="task-item">
                 <div class="task-info">
                     <div class="task-title">Add Profile Picture</div>
                     <div class="task-desc">Set your profile picture (+100 Coins)</div>
                 </div>
-                <button class="task-btn" id="claimPicBtn" onclick="claimPicReward()">Claim</button>
+                <button class="task-btn" id="claimPicBtn" onclick="claimPicReward()" disabled>Claim</button>
             </div>
 
-            <!-- Task 2: Username -->
+            <!-- 2. Set Username -->
             <div class="task-item" style="flex-direction:column; align-items:stretch;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div class="task-info">
                         <div class="task-title">Set Username</div>
                         <div class="task-desc">Enter your username (+100 Coins)</div>
                     </div>
-                    <button class="task-btn" id="claimUsernameBtn" onclick="claimUsernameReward()">Claim</button>
+                    <button class="task-btn" id="claimUsernameBtn" onclick="claimUsernameReward()" disabled>Claim</button>
                 </div>
                 <div class="task-input-group">
-                    <input type="text" id="usernameInput" class="task-input" placeholder="Enter your username...">
+                    <input type="text" id="usernameInput" class="task-input" placeholder="Enter your username..." oninput="checkUsernameInput()">
                 </div>
             </div>
 
-            <!-- Task 3: Invite 1 Friend -->
+            <!-- 3. Invite 1 Friend -->
             <div class="task-item">
                 <div class="task-info">
                     <div class="task-title">Invite 1 Friend</div>
                     <div class="task-desc">Refer 1 friend (+100 Coins)</div>
                 </div>
-                <button class="task-btn" id="claimRef1Btn" onclick="claimRef1Reward()">Claim</button>
+                <button class="task-btn" id="claimRef1Btn" onclick="claimRef1Reward()" disabled>Claim</button>
             </div>
 
-            <!-- Task 4: Invite 2 Friends -->
+            <!-- 4. Invite 2 Friends -->
             <div class="task-item">
                 <div class="task-info">
                     <div class="task-title">Invite 2 Friends</div>
                     <div class="task-desc">Refer 2 friends (+200 Coins)</div>
                 </div>
-                <button class="task-btn" id="claimRef2Btn" onclick="claimRef2Reward()">Claim</button>
+                <button class="task-btn" id="claimRef2Btn" onclick="claimRef2Reward()" disabled>Claim</button>
+            </div>
+
+            <!-- 5. Invite 3 Friends -->
+            <div class="task-item">
+                <div class="task-info">
+                    <div class="task-title">Invite 3 Friends</div>
+                    <div class="task-desc">Refer 3 friends (+300 Coins)</div>
+                </div>
+                <button class="task-btn" id="claimRef3Btn" onclick="claimRef3Reward()" disabled>Claim</button>
+            </div>
+
+            <!-- 6. Invite 4 Friends -->
+            <div class="task-item">
+                <div class="task-info">
+                    <div class="task-title">Invite 4 Friends</div>
+                    <div class="task-desc">Refer 4 friends (+400 Coins)</div>
+                </div>
+                <button class="task-btn" id="claimRef4Btn" onclick="claimRef4Reward()" disabled>Claim</button>
+            </div>
+
+            <!-- 7. Invite 5 Friends -->
+            <div class="task-item">
+                <div class="task-info">
+                    <div class="task-title">Invite 5 Friends</div>
+                    <div class="task-desc">Refer 5 friends (+500 Coins)</div>
+                </div>
+                <button class="task-btn" id="claimRef5Btn" onclick="claimRef5Reward()" disabled>Claim</button>
             </div>
 
         </div>
@@ -1641,7 +1669,7 @@ gameBackBtn.addEventListener("click", function(e){
 
 const TOTAL_TASKS = 10;
 const REWARD_PER_TASK = 100;
-const SAVE_KEY = "koko_memory_match_progress_v5";
+const SAVE_KEY = "koko_memory_match_progress_v6";
 
 let savedProgress = {};
 try{
@@ -1653,10 +1681,14 @@ try{
 let score = Number(savedProgress.score) || 0;
 let currentTask = Number(savedProgress.currentTask) || 0;
 let referralCount = Number(savedProgress.referralCount) || 0;
+
 let picClaimed = Boolean(savedProgress.picClaimed) || false;
 let usernameClaimed = Boolean(savedProgress.usernameClaimed) || false;
 let ref1Claimed = Boolean(savedProgress.ref1Claimed) || false;
 let ref2Claimed = Boolean(savedProgress.ref2Claimed) || false;
+let ref3Claimed = Boolean(savedProgress.ref3Claimed) || false;
+let ref4Claimed = Boolean(savedProgress.ref4Claimed) || false;
+let ref5Claimed = Boolean(savedProgress.ref5Claimed) || false;
 
 let board = [];
 let firstSelection = null;
@@ -1687,7 +1719,10 @@ function saveProgress(){
             picClaimed: picClaimed,
             usernameClaimed: usernameClaimed,
             ref1Claimed: ref1Claimed,
-            ref2Claimed: ref2Claimed
+            ref2Claimed: ref2Claimed,
+            ref3Claimed: ref3Claimed,
+            ref4Claimed: ref4Claimed,
+            ref5Claimed: ref5Claimed
         }));
     }catch(error){
         console.log("Could not save progress", error);
@@ -1716,30 +1751,39 @@ function updateTaskUI(){
     const userBtn = document.getElementById("claimUsernameBtn");
     const ref1Btn = document.getElementById("claimRef1Btn");
     const ref2Btn = document.getElementById("claimRef2Btn");
+    const ref3Btn = document.getElementById("claimRef3Btn");
+    const ref4Btn = document.getElementById("claimRef4Btn");
+    const ref5Btn = document.getElementById("claimRef5Btn");
 
-    if(picClaimed) {
+    // Profile Picture Check (Telegram user has photo or saved)
+    let hasProfilePic = tgUser && tgUser.photo_url;
+    if(picClaimed){
         picBtn.textContent = "Claimed ✓";
         picBtn.disabled = true;
+    } else {
+        picBtn.disabled = !hasProfilePic;
     }
 
-    if(usernameClaimed) {
+    // Username Check
+    const usernameInput = document.getElementById("usernameInput");
+    if(usernameClaimed){
         userBtn.textContent = "Claimed ✓";
         userBtn.disabled = true;
+    } else {
+        let hasUsername = (tgUser && tgUser.username) || (usernameInput && usernameInput.value.trim().length > 0);
+        userBtn.disabled = !hasUsername;
     }
 
-    if(ref1Claimed) {
-        ref1Btn.textContent = "Claimed ✓";
-        ref1Btn.disabled = true;
-    } else {
-        ref1Btn.disabled = referralCount < 1;
-    }
+    // Referrals Checks
+    ref1Claimed ? (ref1Btn.textContent = "Claimed ✓", ref1Btn.disabled = true) : (ref1Btn.disabled = referralCount < 1);
+    ref2Claimed ? (ref2Btn.textContent = "Claimed ✓", ref2Btn.disabled = true) : (ref2Btn.disabled = referralCount < 2);
+    ref3Claimed ? (ref3Btn.textContent = "Claimed ✓", ref3Btn.disabled = true) : (ref3Btn.disabled = referralCount < 3);
+    ref4Claimed ? (ref4Btn.textContent = "Claimed ✓", ref4Btn.disabled = true) : (ref4Btn.disabled = referralCount < 4);
+    ref5Claimed ? (ref5Btn.textContent = "Claimed ✓", ref5Btn.disabled = true) : (ref5Btn.disabled = referralCount < 5);
+}
 
-    if(ref2Claimed) {
-        ref2Btn.textContent = "Claimed ✓";
-        ref2Btn.disabled = true;
-    } else {
-        ref2Btn.disabled = referralCount < 2;
-    }
+function checkUsernameInput(){
+    updateTaskUI();
 }
 
 
@@ -1758,42 +1802,56 @@ function claimPicReward(){
 
 function claimUsernameReward(){
     if(usernameClaimed) return;
-    const inputVal = document.getElementById("usernameInput").value.trim();
-    if(inputVal.length > 0 || (tgUser && tgUser.username)){
-        score += 100;
-        usernameClaimed = true;
-        saveProgress();
-        updateUI();
-        alert("100 Coins added for Username!");
-    } else {
-        alert("Please enter your username first.");
-    }
+    score += 100;
+    usernameClaimed = true;
+    saveProgress();
+    updateUI();
+    alert("100 Coins added for Username!");
 }
 
 function claimRef1Reward(){
-    if(ref1Claimed) return;
-    if(referralCount >= 1){
-        score += 100;
-        ref1Claimed = true;
-        saveProgress();
-        updateUI();
-        alert("100 Coins added for 1 Referral!");
-    } else {
-        alert("You need at least 1 referral to claim this.");
-    }
+    if(ref1Claimed || referralCount < 1) return;
+    score += 100;
+    ref1Claimed = true;
+    saveProgress();
+    updateUI();
+    alert("100 Coins added for 1 Referral!");
 }
 
 function claimRef2Reward(){
-    if(ref2Claimed) return;
-    if(referralCount >= 2){
-        score += 200;
-        ref2Claimed = true;
-        saveProgress();
-        updateUI();
-        alert("200 Coins added for 2 Referrals!");
-    } else {
-        alert("You need at least 2 referrals to claim this.");
-    }
+    if(ref2Claimed || referralCount < 2) return;
+    score += 200;
+    ref2Claimed = true;
+    saveProgress();
+    updateUI();
+    alert("200 Coins added for 2 Referrals!");
+}
+
+function claimRef3Reward(){
+    if(ref3Claimed || referralCount < 3) return;
+    score += 300;
+    ref3Claimed = true;
+    saveProgress();
+    updateUI();
+    alert("300 Coins added for 3 Referrals!");
+}
+
+function claimRef4Reward(){
+    if(ref4Claimed || referralCount < 4) return;
+    score += 400;
+    ref4Claimed = true;
+    saveProgress();
+    updateUI();
+    alert("400 Coins added for 4 Referrals!");
+}
+
+function claimRef5Reward(){
+    if(ref5Claimed || referralCount < 5) return;
+    score += 500;
+    ref5Claimed = true;
+    saveProgress();
+    updateUI();
+    alert("500 Coins added for 5 Referrals!");
 }
 
 
@@ -2057,4 +2115,4 @@ showPage("home");
 </script>
 
 </body>
-</html>
+      </html>
