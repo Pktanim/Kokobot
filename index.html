@@ -1666,27 +1666,27 @@ gameBackBtn.addEventListener("click", function(e){
 
 
 /* =========================================================
-   GAME SETTINGS & ROBUST MIGRATION STORAGE DATA
+   PER-USER DYNAMIC STORAGE & UNLIMITED REFERRAL LOGIC
 ========================================================= */
 
 const TOTAL_TASKS = 10;
 const REWARD_PER_TASK = 100;
-const MASTER_SAVE_KEY = "koko_memory_match_master_progress";
+
+// Unique Storage Key based on Telegram User ID so every account has its own score & progress
+let currentUserId = (tgUser && tgUser.id) ? String(tgUser.id) : "guest_user";
+const USER_SAVE_KEY = "koko_memory_match_user_" + currentUserId;
 
 function loadUserProgress(){
     let data = null;
     try {
-        const raw = localStorage.getItem(MASTER_SAVE_KEY);
+        const raw = localStorage.getItem(USER_SAVE_KEY);
         if(raw) {
             data = JSON.parse(raw);
         } else {
-            const legacyKeys = ["koko_memory_match_progress_v8", "koko_memory_match_progress_v7", "koko_memory_match_progress_v6", "koko_memory_match_progress_v5", "koko_memory_match_progress_v4"];
-            for(let i=0; i<legacyKeys.length; i++){
-                const oldRaw = localStorage.getItem(legacyKeys[i]);
-                if(oldRaw){
-                    data = JSON.parse(oldRaw);
-                    break;
-                }
+            // Fallback to master key if specific user key doesn't exist yet
+            const masterRaw = localStorage.getItem("koko_memory_match_master_progress");
+            if(masterRaw) {
+                data = JSON.parse(masterRaw);
             }
         }
     } catch(e){
@@ -1721,13 +1721,12 @@ let ref3Claimed = userProg.ref3Claimed;
 let ref4Claimed = userProg.ref4Claimed;
 let ref5Claimed = userProg.ref5Claimed;
 
-// Handle referral tracking from startParam for any user
+// Unlimited referral increment when entering via startParam (No device locks)
 try {
     if(startParam && startParam.startsWith("ref_")) {
-        let currentUserId = tgUser ? tgUser.id : "local_guest";
-        let refTrackKey = "koko_ref_tracked_" + currentUserId;
-        if(!localStorage.getItem(refTrackKey)) {
-            localStorage.setItem(refTrackKey, "true");
+        let refTargetId = startParam.replace("ref_", "");
+        // Prevent self-referral if user clicks their own link
+        if(refTargetId !== currentUserId) {
             referralCount += 1;
         }
     }
@@ -1755,7 +1754,7 @@ const emojiPool = [
 
 function saveProgress(){
     try{
-        localStorage.setItem(MASTER_SAVE_KEY, JSON.stringify({
+        const payload = JSON.stringify({
             score: score,
             currentTask: currentTask,
             referralCount: referralCount,
@@ -1766,7 +1765,9 @@ function saveProgress(){
             ref3Claimed: ref3Claimed,
             ref4Claimed: ref4Claimed,
             ref5Claimed: ref5Claimed
-        }));
+        });
+        localStorage.setItem(USER_SAVE_KEY, payload);
+        localStorage.setItem("koko_memory_match_master_progress", payload);
     }catch(error){
         console.log("Could not save progress", error);
     }
@@ -1828,71 +1829,70 @@ function checkUsernameInput(){
 
 
 /* =========================================================
-   MONETAG REWARDED AD SDK WRAPPER
+   MONETAG REWARDED AD SDK WRAPPER (GUARANTEED REWARD)
 ========================================================= */
 
 function showRewardedAd(){
-    return new Promise(function(resolve, reject){
+    return new Promise(function(resolve){
         if(typeof window.show_11926774 !== "function"){
-            reject(new Error("Monetag Rewarded Ad is not loaded."));
+            resolve();
             return;
         }
         try{
             const adResult = window.show_11926774();
-            if(!adResult || typeof adResult.then !== "function"){
-                reject(new Error("Rewarded Ad did not return a Promise."));
-                return;
+            if(adResult && typeof adResult.then === "function"){
+                adResult.then(function(){
+                    resolve();
+                }).catch(function(){
+                    resolve();
+                });
+            } else {
+                resolve();
             }
-            adResult.then(function(){ resolve(); }, function(error){ reject(error); });
         }catch(error){
-            reject(error);
+            resolve();
         }
     });
 }
 
 
 /* =========================================================
-   TASK CLAIM WITH AD INTEGRATION (FOR ALL USERS)
+   TASK CLAIM WITH AD INTEGRATION
 ========================================================= */
 
 function processTaskClaim(taskType){
-    showRewardedAd()
-    .then(function(){
+    showRewardedAd().then(function(){
         if(taskType === 'pic' && !picClaimed){
             score += 100;
             picClaimed = true;
-            alert("Ad completed! +100 Coins added for Profile Picture!");
+            alert("Success! +100 Coins added for Profile Picture!");
         } else if(taskType === 'username' && !usernameClaimed){
             score += 100;
             usernameClaimed = true;
-            alert("Ad completed! +100 Coins added for Username!");
+            alert("Success! +100 Coins added for Username!");
         } else if(taskType === 'ref1' && !ref1Claimed && referralCount >= 1){
             score += 100;
             ref1Claimed = true;
-            alert("Ad completed! +100 Coins added for 1 Referral!");
+            alert("Success! +100 Coins added for 1 Referral!");
         } else if(taskType === 'ref2' && !ref2Claimed && referralCount >= 2){
             score += 200;
             ref2Claimed = true;
-            alert("Ad completed! +200 Coins added for 2 Referrals!");
+            alert("Success! +200 Coins added for 2 Referrals!");
         } else if(taskType === 'ref3' && !ref3Claimed && referralCount >= 3){
             score += 300;
             ref3Claimed = true;
-            alert("Ad completed! +300 Coins added for 3 Referrals!");
+            alert("Success! +300 Coins added for 3 Referrals!");
         } else if(taskType === 'ref4' && !ref4Claimed && referralCount >= 4){
             score += 400;
             ref4Claimed = true;
-            alert("Ad completed! +400 Coins added for 4 Referrals!");
+            alert("Success! +400 Coins added for 4 Referrals!");
         } else if(taskType === 'ref5' && !ref5Claimed && referralCount >= 5){
             score += 500;
             ref5Claimed = true;
-            alert("Ad completed! +500 Coins added for 5 Referrals!");
+            alert("Success! +500 Coins added for 5 Referrals!");
         }
         saveProgress();
         updateUI();
-    })
-    .catch(function(error){
-        console.log("Rewarded ad not completed:", error);
-        alert("Ad failed or skipped. Reward not granted.");
     });
 }
 
@@ -2016,8 +2016,7 @@ function finishTask(){
     message.className = "info";
     message.textContent = "🎉 Task Complete! Rewarded Ad চালু হচ্ছে...";
 
-    showRewardedAd()
-    .then(function(){
+    showRewardedAd().then(function(){
         score += REWARD_PER_TASK;
         currentTask += 1;
         saveProgress();
@@ -2039,12 +2038,6 @@ function finishTask(){
         setTimeout(function(){
             initGame();
         }, 1200);
-    })
-    .catch(function(error){
-        console.log("Rewarded ad not completed:", error);
-        taskBusy = false;
-        message.className = "error";
-        message.textContent = "❌ Ad সম্পূর্ণ হয়নি। 100 Coins পাওয়া যায়নি। আবার চেষ্টা করো।";
     });
 }
 
@@ -2143,4 +2136,4 @@ showPage("home");
 </script>
 
 </body>
-                          </html>
+                              </html>
