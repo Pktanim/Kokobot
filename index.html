@@ -1,0 +1,2814 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Koko Memory Match</title>
+
+<!-- Monetag Rewarded Interstitial SDK -->
+<script
+    src="//libtl.com/sdk.js"
+    data-zone="11926774"
+    data-sdk="show_11926774">
+</script>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html{
+    background:#07111f;
+}
+
+body{
+    margin:0;
+    padding:0;
+    min-height:100vh;
+
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            #173b63 0%,
+            #0f172a 38%,
+            #07111f 100%
+        );
+
+    color:#fff;
+    font-family:Arial,"Segoe UI",sans-serif;
+}
+
+button{
+    font-family:inherit;
+}
+
+.app{
+    width:100%;
+    min-height:100vh;
+    padding:14px 12px 100px;
+}
+
+/* =========================
+   TOP BAR
+========================= */
+
+.topbar{
+    width:100%;
+    max-width:420px;
+    margin:0 auto 14px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.logo{
+    width:42px;
+    height:42px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #38bdf8,
+            #6366f1
+        );
+
+    box-shadow:
+        0 7px 25px rgba(56,189,248,.22);
+
+    font-size:22px;
+    font-weight:900;
+}
+
+.brand-text{
+    text-align:left;
+}
+
+.brand-name{
+    font-size:17px;
+    font-weight:800;
+    letter-spacing:.3px;
+}
+
+.brand-sub{
+    margin-top:2px;
+    color:#94a3b8;
+    font-size:11px;
+}
+
+.profile-btn{
+    width:44px;
+    height:44px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:14px;
+
+    background:rgba(30,41,59,.82);
+
+    box-shadow:
+        0 8px 22px rgba(0,0,0,.22);
+
+    cursor:pointer;
+}
+
+.profile-btn svg{
+    width:23px;
+    height:23px;
+
+    stroke:#e2e8f0;
+    stroke-width:1.8;
+}
+
+/* =========================
+   PAGE
+========================= */
+
+.page{
+    width:100%;
+    max-width:420px;
+    margin:0 auto;
+}
+
+.page.hidden{
+    display:none;
+}
+
+/* =========================
+   HOME
+========================= */
+
+.home-card{
+    padding:20px;
+
+    border:1px solid rgba(56,189,248,.12);
+    border-radius:22px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(30,41,59,.96),
+            rgba(15,23,42,.96)
+        );
+
+    box-shadow:
+        0 15px 35px rgba(0,0,0,.25);
+}
+
+.home-card.hidden{
+    display:none;
+}
+
+.home-title{
+    margin:0;
+    font-size:25px;
+    font-weight:800;
+}
+
+.home-sub{
+    margin:8px 0 20px;
+    color:#94a3b8;
+    font-size:14px;
+}
+
+.balance-card{
+    padding:18px;
+
+    border-radius:18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(37,99,235,.24),
+            rgba(124,58,237,.22)
+        );
+
+    border:1px solid rgba(96,165,250,.16);
+}
+
+.balance-label{
+    color:#94a3b8;
+    font-size:13px;
+}
+
+.balance{
+    margin-top:5px;
+    font-size:30px;
+    font-weight:900;
+}
+
+.balance span{
+    color:#facc15;
+}
+
+.home-stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:12px;
+}
+
+.stat-box{
+    padding:15px;
+    border-radius:16px;
+    background:#172235;
+    border:1px solid rgba(148,163,184,.09);
+}
+
+.stat-label{
+    color:#94a3b8;
+    font-size:12px;
+}
+
+.stat-value{
+    margin-top:6px;
+    font-size:21px;
+    font-weight:800;
+}
+
+.go-task{
+    width:100%;
+    margin-top:14px;
+    padding:14px;
+
+    border:0;
+    border-radius:15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #38bdf8,
+            #6366f1
+        );
+
+    color:white;
+
+    font-size:15px;
+    font-weight:800;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 8px 20px rgba(56,189,248,.18);
+}
+
+.go-task:active{
+    transform:scale(.98);
+}
+
+/* =========================
+   HOME GAME SCREEN
+========================= */
+
+.home-game-screen{
+    width:100%;
+}
+
+.home-game-screen.hidden{
+    display:none;
+}
+
+.game-header{
+    width:100%;
+    max-width:400px;
+    margin:0 auto 12px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+}
+
+.game-back-btn{
+    padding:11px 14px;
+
+    border:1px solid rgba(148,163,184,.15);
+    border-radius:13px;
+
+    background:#172235;
+    color:#e2e8f0;
+
+    font-size:13px;
+    font-weight:800;
+
+    cursor:pointer;
+}
+
+.game-back-btn:active{
+    transform:scale(.97);
+}
+
+.game-title{
+    flex:1;
+
+    text-align:right;
+
+    color:#38bdf8;
+
+    font-size:16px;
+    font-weight:800;
+}
+
+/* =========================
+   GAME CONTAINER
+========================= */
+
+.container{
+    width:100%;
+    max-width:400px;
+    margin:0 auto;
+    padding:20px 14px;
+
+    background:#1e293b;
+
+    border-radius:18px;
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,.3);
+}
+
+h1{
+    margin:0 0 10px;
+    font-size:26px;
+    color:#38bdf8;
+}
+
+.score-board{
+    margin:10px 0;
+    padding:10px;
+
+    border-radius:10px;
+
+    background:#334155;
+
+    font-size:18px;
+}
+
+.tasks-left{
+    margin:12px 0;
+
+    color:#94a3b8;
+
+    font-size:15px;
+}
+
+.preview-text{
+    margin:10px 0 14px;
+
+    color:#cbd5e1;
+
+    font-size:14px;
+}
+
+.puzzle-grid{
+    width:100%;
+    max-width:330px;
+    aspect-ratio:1/1;
+
+    margin:0 auto 16px;
+    padding:6px;
+
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+
+    background:#334155;
+
+    border-radius:14px;
+}
+
+.puzzle-tile{
+    min-width:0;
+    min-height:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:#475569;
+
+    border-radius:9px;
+
+    font-size:clamp(22px,7vw,30px);
+
+    cursor:pointer;
+    user-select:none;
+
+    transition:
+        transform .15s,
+        background .2s;
+}
+
+.puzzle-tile:active{
+    transform:scale(.93);
+}
+
+.puzzle-tile.flipped{
+    background:#334155;
+    border:2px solid #38bdf8;
+}
+
+.puzzle-tile.matched{
+    background:#059669;
+    opacity:.7;
+    cursor:default;
+}
+
+#message{
+    min-height:45px;
+
+    margin-top:14px;
+
+    font-size:14px;
+    font-weight:bold;
+    line-height:1.5;
+}
+
+.success{
+    color:#86efac;
+}
+
+.error{
+    color:#fca5a5;
+}
+
+.info{
+    color:#facc15;
+}
+
+/* =========================
+   OTHER PAGES
+========================= */
+
+.section-card{
+    padding:20px;
+
+    border-radius:22px;
+
+    background:#1e293b;
+
+    border:1px solid rgba(148,163,184,.10);
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,.22);
+}
+
+.section-title{
+    margin:0 0 8px;
+
+    font-size:23px;
+    font-weight:800;
+}
+
+.section-sub{
+    margin:0 0 20px;
+
+    color:#94a3b8;
+
+    font-size:14px;
+    line-height:1.5;
+}
+
+.info-row{
+    display:flex;
+    align-items:center;
+    gap:13px;
+
+    padding:15px;
+    margin-top:10px;
+
+    border-radius:16px;
+
+    background:#172235;
+}
+
+.info-icon{
+    width:42px;
+    height:42px;
+
+    flex:none;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:13px;
+
+    background:#243449;
+}
+
+.info-icon svg{
+    width:21px;
+    height:21px;
+
+    stroke:#38bdf8;
+
+    fill:none;
+    stroke-width:1.8;
+}
+
+.info-text{
+    text-align:left;
+}
+
+.info-title{
+    font-size:14px;
+    font-weight:700;
+}
+
+.info-desc{
+    margin-top:4px;
+
+    color:#94a3b8;
+
+    font-size:12px;
+}
+
+.invite-code{
+    margin-top:16px;
+    padding:14px;
+
+    text-align:center;
+
+    border-radius:14px;
+
+    background:#0f172a;
+
+    color:#38bdf8;
+
+    font-size:13px;
+
+    word-break:break-all;
+}
+
+.action-btn{
+    width:100%;
+
+    margin-top:12px;
+    padding:14px;
+
+    border:0;
+    border-radius:14px;
+
+    background:#2563eb;
+
+    color:white;
+
+    font-size:14px;
+    font-weight:800;
+
+    cursor:pointer;
+}
+
+.action-btn:active{
+    transform:scale(.98);
+}
+
+/* =========================
+   EMPTY TASK PAGE
+========================= */
+
+#taskPage{
+    min-height:300px;
+}
+
+/* =========================
+   BOTTOM NAVIGATION
+========================= */
+
+.bottom-nav{
+    position:fixed;
+
+    left:0;
+    right:0;
+    bottom:0;
+
+    z-index:1000;
+
+    padding:
+        8px
+        8px
+        calc(8px + env(safe-area-inset-bottom));
+
+    background:
+        rgba(7,17,31,.94);
+
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+
+    border-top:
+        1px solid rgba(148,163,184,.12);
+
+    box-shadow:
+        0 -10px 30px rgba(0,0,0,.25);
+}
+
+.nav-inner{
+    width:100%;
+    max-width:430px;
+
+    margin:0 auto;
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(5,1fr);
+
+    gap:3px;
+}
+
+.nav-btn{
+    position:relative;
+
+    min-height:58px;
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:4px;
+
+    border:0;
+
+    background:transparent;
+
+    color:#64748b;
+
+    cursor:pointer;
+}
+
+.nav-btn svg{
+    width:21px;
+    height:21px;
+
+    fill:none;
+
+    stroke:currentColor;
+
+    stroke-width:1.8;
+
+    transition:
+        transform .2s,
+        color .2s;
+}
+
+.nav-label{
+    font-size:10px;
+    font-weight:700;
+}
+
+.nav-btn.active{
+    color:#38bdf8;
+}
+
+.nav-btn.active svg{
+    transform:translateY(-1px);
+}
+
+.nav-btn.active::before{
+    content:"";
+
+    position:absolute;
+
+    top:-8px;
+
+    width:28px;
+    height:3px;
+
+    border-radius:
+        0 0 5px 5px;
+
+    background:#38bdf8;
+
+    box-shadow:
+        0 0 12px rgba(56,189,248,.65);
+}
+
+/* =========================
+   PROFILE POPUP
+========================= */
+
+.profile-overlay{
+    position:fixed;
+    inset:0;
+
+    z-index:2000;
+
+    display:none;
+
+    align-items:flex-start;
+    justify-content:flex-end;
+
+    padding:70px 14px 0;
+
+    background:rgba(0,0,0,.35);
+}
+
+.profile-overlay.show{
+    display:flex;
+}
+
+.profile-popup{
+    width:220px;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    background:#1e293b;
+
+    border:1px solid rgba(148,163,184,.16);
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,.45);
+}
+
+.popup-title{
+    font-size:16px;
+    font-weight:800;
+}
+
+.popup-name{
+    margin-top:5px;
+
+    color:#38bdf8;
+
+    font-size:14px;
+}
+
+.close-profile{
+    width:100%;
+
+    margin-top:14px;
+    padding:10px;
+
+    border:0;
+    border-radius:10px;
+
+    background:#334155;
+
+    color:white;
+
+    cursor:pointer;
+}
+
+/* =========================
+   SMALL SCREEN
+========================= */
+
+@media(max-width:350px){
+
+    .app{
+        padding-left:8px;
+        padding-right:8px;
+    }
+
+    .nav-label{
+        font-size:9px;
+    }
+
+    .nav-btn{
+        min-height:55px;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =========================
+         TOP BAR
+    ========================== -->
+
+    <div class="topbar">
+
+        <div class="brand">
+
+            <div class="logo">
+                K
+            </div>
+
+            <div class="brand-text">
+
+                <div class="brand-name">
+                    KOKO
+                </div>
+
+                <div class="brand-sub">
+                    Memory Match
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PROFILE -->
+
+        <button
+            class="profile-btn"
+            id="profileBtn"
+            aria-label="Profile">
+
+            <svg
+                viewBox="0 0 24 24"
+                fill="none">
+
+                <circle
+                    cx="12"
+                    cy="8"
+                    r="3.5"/>
+
+                <path
+                    d="M4.5 20c.8-4 3.2-6 7.5-6s6.7 2 7.5 6"/>
+
+            </svg>
+
+        </button>
+
+    </div>
+
+
+    <!-- =========================
+         HOME PAGE
+    ========================== -->
+
+    <div
+        class="page"
+        id="homePage">
+
+        <!-- HOME MAIN -->
+
+        <div
+            class="home-card"
+            id="homeMainCard">
+
+            <h2 class="home-title">
+                Welcome to KOKO 👋
+            </h2>
+
+            <p class="home-sub">
+                Match the cards and complete your tasks.
+            </p>
+
+
+            <div class="balance-card">
+
+                <div class="balance-label">
+                    Your Balance
+                </div>
+
+                <div class="balance">
+                    🪙 <span id="homeScore">0</span>
+                </div>
+
+            </div>
+
+
+            <div class="home-stats">
+
+                <div class="stat-box">
+
+                    <div class="stat-label">
+                        Completed Tasks
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="homeTasks">
+                        0/10
+                    </div>
+
+                </div>
+
+
+                <div class="stat-box">
+
+                    <div class="stat-label">
+                        Possible Reward
+                    </div>
+
+                    <div class="stat-value">
+                        1000
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <button
+                class="go-task"
+                id="goTaskBtn">
+
+                🎯 Start Matching Task
+
+            </button>
+
+        </div>
+
+
+        <!-- =========================
+             HOME MATCHING GAME
+        ========================== -->
+
+        <div
+            id="homeGameScreen"
+            class="home-game-screen hidden">
+
+            <div class="game-header">
+
+                <button
+                    class="game-back-btn"
+                    id="gameBackBtn">
+
+                    ← Back
+
+                </button>
+
+                <div class="game-title">
+                    Koko Match
+                </div>
+
+            </div>
+
+
+            <div class="container">
+
+                <h1>
+                    Koko Memory Match
+                </h1>
+
+                <div class="score-board">
+                    🪙 Coins:
+                    <span id="score">0</span>
+                </div>
+
+                <div class="tasks-left">
+                    Completed Tasks:
+                    <span id="tasksCount">0</span>/10
+                </div>
+
+                <div class="preview-text">
+                    সব জোড়া মিলিয়ে Task সম্পূর্ণ করো এবং ১০০ Coins পাও।
+                </div>
+
+                <div
+                    class="puzzle-grid"
+                    id="puzzleGrid">
+                </div>
+
+                <div id="message"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         TASK PAGE
+         EMPTY FOR NOW
+    ========================== -->
+
+    <div
+        class="page hidden"
+        id="taskPage">
+    </div>
+
+
+    <!-- =========================
+         INVITE PAGE
+    ========================== -->
+
+    <div
+        class="page hidden"
+        id="invitePage">
+
+        <div class="section-card">
+
+            <h2 class="section-title">
+                Invite Friends
+            </h2>
+
+            <p class="section-sub">
+                তোমার বন্ধুদের KOKO-তে Invite করো।
+            </p>
+
+
+            <div class="info-row">
+
+                <div class="info-icon">
+
+                    <svg viewBox="0 0 24 24">
+
+                        <path
+                            d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+
+                        <circle
+                            cx="9"
+                            cy="7"
+                            r="4"/>
+
+                        <path
+                            d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+
+                        <path
+                            d="M16 3.13a4 4 0 0 1 0 7.75"/>
+
+                    </svg>
+
+                </div>
+
+                <div class="info-text">
+
+                    <div class="info-title">
+                        Invite your friends
+                    </div>
+
+                    <div class="info-desc">
+                        তোমার referral link share করো।
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="invite-code"
+                id="inviteLink">
+
+                Referral link তৈরি হচ্ছে...
+
+            </div>
+
+
+            <button
+                class="action-btn"
+                id="copyInviteBtn">
+
+                Copy Invite Link
+
+            </button>
+
+
+            <button
+                class="action-btn"
+                id="shareInviteBtn">
+
+                Share Invite Link
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         ADS PAGE
+    ========================== -->
+
+    <div
+        class="page hidden"
+        id="adsPage">
+
+        <div class="section-card">
+
+            <h2 class="section-title">
+                Ads
+            </h2>
+
+            <p class="section-sub">
+                Rewarded ads শুধুমাত্র Task সম্পূর্ণ করার সময় চালু হবে।
+            </p>
+
+
+            <div class="info-row">
+
+                <div class="info-icon">
+
+                    <svg viewBox="0 0 24 24">
+
+                        <rect
+                            x="3"
+                            y="5"
+                            width="18"
+                            height="14"
+                            rx="3"/>
+
+                        <path
+                            d="m10 9 5 3-5 3V9z"/>
+
+                    </svg>
+
+                </div>
+
+                <div class="info-text">
+
+                    <div class="info-title">
+                        Rewarded Interstitial
+                    </div>
+
+                    <div class="info-desc">
+                        Task complete হওয়ার পর Rewarded Ad চালু হবে।
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <div class="info-icon">
+
+                    <svg viewBox="0 0 24 24">
+
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="9"/>
+
+                        <path
+                            d="M12 7v5l3 2"/>
+
+                    </svg>
+
+                </div>
+
+                <div class="info-text">
+
+                    <div class="info-title">
+                        Reward System
+                    </div>
+
+                    <div class="info-desc">
+                        Ad সফলভাবে complete হলে 100 Coins যোগ হবে।
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         WALLET PAGE
+    ========================== -->
+
+    <div
+        class="page hidden"
+        id="walletPage">
+
+        <div class="section-card">
+
+            <h2 class="section-title">
+                Wallet
+            </h2>
+
+            <p class="section-sub">
+                তোমার বর্তমান KOKO balance এখানে দেখতে পারবে।
+            </p>
+
+
+            <div class="balance-card">
+
+                <div class="balance-label">
+                    Available Coins
+                </div>
+
+                <div class="balance">
+                    🪙 <span id="walletScore">0</span>
+                </div>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <div class="info-icon">
+
+                    <svg viewBox="0 0 24 24">
+
+                        <rect
+                            x="3"
+                            y="5"
+                            width="18"
+                            height="14"
+                            rx="3"/>
+
+                        <path
+                            d="M16 12h.01"/>
+
+                    </svg>
+
+                </div>
+
+                <div class="info-text">
+
+                    <div class="info-title">
+                        Coin Balance
+                    </div>
+
+                    <div class="info-desc">
+                        Matching Task থেকে Coins জমা হবে।
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     BOTTOM NAVIGATION
+========================== -->
+
+<div class="bottom-nav">
+
+    <div class="nav-inner">
+
+
+        <!-- HOME -->
+
+        <button
+            class="nav-btn active"
+            data-page="home">
+
+            <svg viewBox="0 0 24 24">
+
+                <path d="m3 10 9-7 9 7"/>
+
+                <path d="M5 9v11h14V9"/>
+
+                <path d="M9 20v-6h6v6"/>
+
+            </svg>
+
+            <span class="nav-label">
+                Home
+            </span>
+
+        </button>
+
+
+        <!-- TASK -->
+
+        <button
+            class="nav-btn"
+            data-page="task">
+
+            <svg viewBox="0 0 24 24">
+
+                <rect
+                    x="4"
+                    y="3"
+                    width="16"
+                    height="18"
+                    rx="3"/>
+
+                <path d="M8 8h8"/>
+
+                <path d="M8 12h2"/>
+
+                <path d="m8 16 2 2 5-5"/>
+
+            </svg>
+
+            <span class="nav-label">
+                Task
+            </span>
+
+        </button>
+
+
+        <!-- INVITE -->
+
+        <button
+            class="nav-btn"
+            data-page="invite">
+
+            <svg viewBox="0 0 24 24">
+
+                <circle
+                    cx="9"
+                    cy="7"
+                    r="4"/>
+
+                <path
+                    d="M2 21v-2a7 7 0 0 1 14 0v2"/>
+
+                <path
+                    d="M19 8v6"/>
+
+                <path
+                    d="M16 11h6"/>
+
+            </svg>
+
+            <span class="nav-label">
+                Invite
+            </span>
+
+        </button>
+
+
+        <!-- ADS -->
+
+        <button
+            class="nav-btn"
+            data-page="ads">
+
+            <svg viewBox="0 0 24 24">
+
+                <rect
+                    x="3"
+                    y="5"
+                    width="18"
+                    height="14"
+                    rx="3"/>
+
+                <path
+                    d="m10 9 5 3-5 3V9z"/>
+
+            </svg>
+
+            <span class="nav-label">
+                Ads
+            </span>
+
+        </button>
+
+
+        <!-- WALLET -->
+
+        <button
+            class="nav-btn"
+            data-page="wallet">
+
+            <svg viewBox="0 0 24 24">
+
+                <path
+                    d="M3 7h18v12H3z"/>
+
+                <path
+                    d="M3 7V5a2 2 0 0 1 2-2h13"/>
+
+                <path
+                    d="M16 13h5"/>
+
+                <circle
+                    cx="16"
+                    cy="13"
+                    r=".7"/>
+
+            </svg>
+
+            <span class="nav-label">
+                Wallet
+            </span>
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     PROFILE POPUP
+========================== -->
+
+<div
+    class="profile-overlay"
+    id="profileOverlay">
+
+    <div class="profile-popup">
+
+        <div class="profile-avatar">
+            👤
+        </div>
+
+        <div
+            class="popup-title"
+            id="profileName">
+
+            KOKO User
+
+        </div>
+
+        <div
+            class="popup-name"
+            id="profileUsername">
+
+            Telegram User
+
+        </div>
+
+        <button
+            class="close-profile"
+            id="closeProfile">
+
+            Close
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+"use strict";
+
+
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+const pages = {
+
+    home:
+        document.getElementById("homePage"),
+
+    task:
+        document.getElementById("taskPage"),
+
+    invite:
+        document.getElementById("invitePage"),
+
+    ads:
+        document.getElementById("adsPage"),
+
+    wallet:
+        document.getElementById("walletPage")
+
+};
+
+
+const navButtons =
+    document.querySelectorAll(".nav-btn");
+
+
+const homePage =
+    document.getElementById(
+        "homePage"
+    );
+
+
+const homeMainCard =
+    document.getElementById(
+        "homeMainCard"
+    );
+
+
+const homeGameScreen =
+    document.getElementById(
+        "homeGameScreen"
+    );
+
+
+function showPage(pageName){
+
+    Object.keys(pages).forEach(
+        function(key){
+
+            pages[key].classList.add(
+                "hidden"
+            );
+
+        }
+    );
+
+
+    if(pages[pageName]){
+
+        pages[pageName].classList.remove(
+            "hidden"
+        );
+
+    }
+
+
+    /*
+       যখন Home ছাড়া অন্য page খোলা হবে,
+       তখন Home-এর Game Screen বন্ধ হবে।
+    */
+
+    if(pageName !== "home"){
+
+        homeGameScreen.classList.add(
+            "hidden"
+        );
+
+        homeMainCard.classList.remove(
+            "hidden"
+        );
+
+    }
+
+
+    navButtons.forEach(
+        function(button){
+
+            button.classList.remove(
+                "active"
+            );
+
+
+            if(
+                button.dataset.page ===
+                pageName
+            ){
+
+                button.classList.add(
+                    "active"
+                );
+
+            }
+
+        }
+    );
+
+
+    updateExtraUI();
+
+    window.scrollTo(
+        0,
+        0
+    );
+
+}
+
+
+navButtons.forEach(
+    function(button){
+
+        button.addEventListener(
+            "click",
+            function(){
+
+                showPage(
+                    button.dataset.page
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   HOME → MATCHING GAME
+========================================================= */
+
+const goTaskBtn =
+    document.getElementById(
+        "goTaskBtn"
+    );
+
+
+const gameBackBtn =
+    document.getElementById(
+        "gameBackBtn"
+    );
+
+
+goTaskBtn.addEventListener(
+    "click",
+    function(){
+
+        /*
+           Home page-ই active থাকবে।
+           শুধু Home-এর ভিতরের Game Screen খুলবে।
+        */
+
+        showPage("home");
+
+
+        homeMainCard.classList.add(
+            "hidden"
+        );
+
+
+        homeGameScreen.classList.remove(
+            "hidden"
+        );
+
+
+        window.scrollTo(
+            0,
+            0
+        );
+
+    }
+);
+
+
+/* =========================================================
+   GAME → BACK TO HOME
+========================================================= */
+
+gameBackBtn.addEventListener(
+    "click",
+    function(){
+
+        homeGameScreen.classList.add(
+            "hidden"
+        );
+
+
+        homeMainCard.classList.remove(
+            "hidden"
+        );
+
+
+        showPage("home");
+
+    }
+);
+
+
+/* =========================================================
+   ORIGINAL GAME SETTINGS
+========================================================= */
+
+const TOTAL_TASKS = 10;
+
+const REWARD_PER_TASK = 100;
+
+const SAVE_KEY =
+    "koko_memory_match_progress_v3";
+
+
+/* =========================================================
+   LOAD SAVED PROGRESS
+========================================================= */
+
+let savedProgress = {};
+
+try{
+
+    savedProgress = JSON.parse(
+        localStorage.getItem(
+            SAVE_KEY
+        ) || "{}"
+    );
+
+}catch(error){
+
+    savedProgress = {};
+
+}
+
+
+/* =========================================================
+   GAME VARIABLES
+========================================================= */
+
+let score =
+    Number(savedProgress.score) || 0;
+
+let currentTask =
+    Number(savedProgress.currentTask) || 0;
+
+let board = [];
+
+let firstSelection = null;
+
+let secondSelection = null;
+
+let isChecking = false;
+
+let matchedCount = 0;
+
+let taskBusy = false;
+
+
+/* =========================================================
+   HTML ELEMENTS
+========================================================= */
+
+const grid =
+    document.getElementById(
+        "puzzleGrid"
+    );
+
+
+const message =
+    document.getElementById(
+        "message"
+    );
+
+
+const scoreElement =
+    document.getElementById(
+        "score"
+    );
+
+
+const tasksElement =
+    document.getElementById(
+        "tasksCount"
+    );
+
+
+/* =========================================================
+   EMOJI SETS
+========================================================= */
+
+const emojiPool = [
+
+    [
+        "🍎",
+        "🍌",
+        "🍇",
+        "🍊",
+        "🍉",
+        "🍓",
+        "🥝",
+        "🍒"
+    ],
+
+    [
+        "🐶",
+        "🐱",
+        "🐭",
+        "🐹",
+        "🐰",
+        "🦊",
+        "🐻",
+        "🐼"
+    ],
+
+    [
+        "⚽",
+        "🏀",
+        "🏈",
+        "⚾",
+        "🎾",
+        "🏐",
+        "🥎",
+        "🏆"
+    ],
+
+    [
+        "🚗",
+        "🚕",
+        "🚙",
+        "🚌",
+        "🏎️",
+        "🚓",
+        "🚑",
+        "🚒"
+    ],
+
+    [
+        "😀",
+        "😂",
+        "😍",
+        "😎",
+        "🤩",
+        "🥳",
+        "😇",
+        "🤗"
+    ]
+
+];
+
+
+/* =========================================================
+   SAVE PROGRESS
+========================================================= */
+
+function saveProgress(){
+
+    try{
+
+        localStorage.setItem(
+
+            SAVE_KEY,
+
+            JSON.stringify({
+
+                score:
+                    score,
+
+                currentTask:
+                    currentTask
+
+            })
+
+        );
+
+    }catch(error){
+
+        console.log(
+            "Could not save progress",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   UPDATE UI
+========================================================= */
+
+function updateUI(){
+
+    scoreElement.textContent =
+        score;
+
+
+    tasksElement.textContent =
+        currentTask;
+
+
+    updateExtraUI();
+
+}
+
+
+/* =========================================================
+   UPDATE HOME / WALLET UI
+========================================================= */
+
+function updateExtraUI(){
+
+    const homeScore =
+        document.getElementById(
+            "homeScore"
+        );
+
+
+    const homeTasks =
+        document.getElementById(
+            "homeTasks"
+        );
+
+
+    const walletScore =
+        document.getElementById(
+            "walletScore"
+        );
+
+
+    if(homeScore){
+
+        homeScore.textContent =
+            score;
+
+    }
+
+
+    if(homeTasks){
+
+        homeTasks.textContent =
+            currentTask + "/10";
+
+    }
+
+
+    if(walletScore){
+
+        walletScore.textContent =
+            score;
+
+    }
+
+}
+
+
+/* =========================================================
+   SHUFFLE
+========================================================= */
+
+function shuffle(array){
+
+    const arr = [...array];
+
+
+    for(
+        let i = arr.length - 1;
+        i > 0;
+        i--
+    ){
+
+        const j =
+            Math.floor(
+                Math.random() *
+                (i + 1)
+            );
+
+
+        [
+            arr[i],
+            arr[j]
+        ] = [
+            arr[j],
+            arr[i]
+        ];
+
+    }
+
+
+    return arr;
+
+}
+
+
+/* =========================================================
+   START GAME
+========================================================= */
+
+function initGame(){
+
+    if(
+        currentTask >=
+        TOTAL_TASKS
+    ){
+
+        grid.innerHTML = "";
+
+        message.className =
+            "success";
+
+        message.textContent =
+            "🏆 সব ১০টি Task সম্পূর্ণ হয়েছে! " +
+            "মোট Coins: " +
+            score;
+
+        updateUI();
+
+        return;
+
+    }
+
+
+    firstSelection = null;
+
+    secondSelection = null;
+
+    isChecking = false;
+
+    matchedCount = 0;
+
+    taskBusy = false;
+
+
+    message.className = "";
+
+    message.textContent =
+        "সব জোড়া মিলাও।";
+
+
+    const set =
+        emojiPool[
+            Math.floor(
+                Math.random() *
+                emojiPool.length
+            )
+        ];
+
+
+    board =
+        shuffle([
+            ...set,
+            ...set
+        ]);
+
+
+    renderBoard();
+
+}
+
+
+/* =========================================================
+   RENDER BOARD
+========================================================= */
+
+function renderBoard(){
+
+    grid.innerHTML = "";
+
+
+    board.forEach(
+        function(icon,index){
+
+            const tile =
+                document.createElement(
+                    "div"
+                );
+
+
+            tile.className =
+                "puzzle-tile";
+
+
+            tile.id =
+                "tile-" + index;
+
+
+            tile.textContent =
+                "❓";
+
+
+            tile.setAttribute(
+                "role",
+                "button"
+            );
+
+
+            tile.setAttribute(
+                "aria-label",
+                "Memory card"
+            );
+
+
+            tile.addEventListener(
+                "click",
+                function(){
+
+                    handleTileClick(
+                        index
+                    );
+
+                }
+            );
+
+
+            grid.appendChild(
+                tile
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   TILE CLICK
+========================================================= */
+
+function handleTileClick(index){
+
+    if(
+        isChecking ||
+        taskBusy
+    ){
+
+        return;
+
+    }
+
+
+    const tile =
+        document.getElementById(
+            "tile-" + index
+        );
+
+
+    if(
+        !tile ||
+        tile.classList.contains(
+            "flipped"
+        ) ||
+        tile.classList.contains(
+            "matched"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    const icon =
+        board[index];
+
+
+    tile.textContent =
+        icon;
+
+
+    tile.classList.add(
+        "flipped"
+    );
+
+
+    if(
+        firstSelection === null
+    ){
+
+        firstSelection = {
+
+            index:index,
+
+            icon:icon
+
+        };
+
+        return;
+
+    }
+
+
+    secondSelection = {
+
+        index:index,
+
+        icon:icon
+
+    };
+
+
+    isChecking = true;
+
+
+    /* MATCH */
+
+    if(
+        firstSelection.icon ===
+        secondSelection.icon
+        &&
+        firstSelection.index !==
+        secondSelection.index
+    ){
+
+        const firstTile =
+            document.getElementById(
+                "tile-" +
+                firstSelection.index
+            );
+
+
+        const secondTile =
+            document.getElementById(
+                "tile-" +
+                secondSelection.index
+            );
+
+
+        if(firstTile){
+
+            firstTile.classList.add(
+                "matched"
+            );
+
+        }
+
+
+        if(secondTile){
+
+            secondTile.classList.add(
+                "matched"
+            );
+
+        }
+
+
+        matchedCount += 2;
+
+
+        resetSelections();
+
+
+        if(
+            matchedCount === 16
+        ){
+
+            finishTask();
+
+        }
+
+    }
+
+    /* NOT MATCH */
+
+    else{
+
+        const a =
+            firstSelection.index;
+
+
+        const b =
+            secondSelection.index;
+
+
+        setTimeout(
+
+            function(){
+
+                const tileA =
+                    document.getElementById(
+                        "tile-" + a
+                    );
+
+
+                const tileB =
+                    document.getElementById(
+                        "tile-" + b
+                    );
+
+
+                if(tileA){
+
+                    tileA.textContent =
+                        "❓";
+
+                    tileA.classList.remove(
+                        "flipped"
+                    );
+
+                }
+
+
+                if(tileB){
+
+                    tileB.textContent =
+                        "❓";
+
+                    tileB.classList.remove(
+                        "flipped"
+                    );
+
+                }
+
+
+                resetSelections();
+
+            },
+
+            800
+
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   RESET SELECTION
+========================================================= */
+
+function resetSelections(){
+
+    firstSelection = null;
+
+    secondSelection = null;
+
+    isChecking = false;
+
+}
+
+
+/* =========================================================
+   MONETAG REWARDED AD
+========================================================= */
+
+function showRewardedAd(){
+
+    return new Promise(
+        function(resolve,reject){
+
+            if(
+                typeof window.show_11926774 !==
+                "function"
+            ){
+
+                reject(
+                    new Error(
+                        "Monetag Rewarded Ad is not loaded."
+                    )
+                );
+
+                return;
+
+            }
+
+
+            try{
+
+                const adResult =
+                    window.show_11926774();
+
+
+                if(
+                    !adResult ||
+                    typeof adResult.then !==
+                    "function"
+                ){
+
+                    reject(
+                        new Error(
+                            "Rewarded Ad did not return a Promise."
+                        )
+                    );
+
+                    return;
+
+                }
+
+
+                adResult.then(
+
+                    function(){
+
+                        resolve();
+
+                    },
+
+                    function(error){
+
+                        reject(error);
+
+                    }
+
+                );
+
+            }catch(error){
+
+                reject(error);
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   FINISH TASK
+========================================================= */
+
+function finishTask(){
+
+    if(taskBusy){
+
+        return;
+
+    }
+
+
+    taskBusy = true;
+
+
+    message.className =
+        "info";
+
+
+    message.textContent =
+        "🎉 Task Complete! " +
+        "Rewarded Ad চালু হচ্ছে...";
+
+
+    showRewardedAd()
+
+    .then(
+
+        function(){
+
+            score +=
+                REWARD_PER_TASK;
+
+
+            currentTask += 1;
+
+
+            saveProgress();
+
+
+            updateUI();
+
+
+            message.className =
+                "success";
+
+
+            message.textContent =
+                "🎉 Ad সম্পূর্ণ হয়েছে! " +
+                "+100 Coins যোগ হয়েছে।";
+
+
+            if(
+                currentTask >=
+                TOTAL_TASKS
+            ){
+
+                setTimeout(
+
+                    function(){
+
+                        grid.innerHTML = "";
+
+
+                        message.className =
+                            "success";
+
+
+                        message.textContent =
+                            "🏆 অভিনন্দন! " +
+                            "সব ১০টি Task সম্পূর্ণ হয়েছে। " +
+                            "মোট Coins: " +
+                            score;
+
+
+                        updateUI();
+
+                    },
+
+                    1200
+
+                );
+
+
+                return;
+
+            }
+
+
+            setTimeout(
+
+                function(){
+
+                    initGame();
+
+                },
+
+                1200
+
+            );
+
+        }
+
+    )
+
+    .catch(
+
+        function(error){
+
+            console.log(
+                "Rewarded ad not completed:",
+                error
+            );
+
+
+            taskBusy = false;
+
+
+            message.className =
+                "error";
+
+
+            message.textContent =
+                "❌ Ad সম্পূর্ণ হয়নি। " +
+                "100 Coins পাওয়া যায়নি। " +
+                "আবার চেষ্টা করো।";
+
+        }
+
+    );
+
+}
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+const profileBtn =
+    document.getElementById(
+        "profileBtn"
+    );
+
+
+const profileOverlay =
+    document.getElementById(
+        "profileOverlay"
+    );
+
+
+const closeProfile =
+    document.getElementById(
+        "closeProfile"
+    );
+
+
+profileBtn.addEventListener(
+    "click",
+    function(){
+
+        profileOverlay.classList.add(
+            "show"
+        );
+
+    }
+);
+
+
+closeProfile.addEventListener(
+    "click",
+    function(){
+
+        profileOverlay.classList.remove(
+            "show"
+        );
+
+    }
+);
+
+
+profileOverlay.addEventListener(
+    "click",
+    function(event){
+
+        if(
+            event.target ===
+            profileOverlay
+        ){
+
+            profileOverlay.classList.remove(
+                "show"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   TELEGRAM USER PROFILE
+========================================================= */
+
+try{
+
+    if(
+        window.Telegram &&
+        window.Telegram.WebApp
+    ){
+
+        const tg =
+            window.Telegram.WebApp;
+
+
+        tg.ready();
+
+
+        const user =
+            tg.initDataUnsafe &&
+            tg.initDataUnsafe.user;
+
+
+        if(user){
+
+            const name =
+                [
+                    user.first_name,
+                    user.last_name
+                ]
+                .filter(Boolean)
+                .join(" ");
+
+
+            const username =
+                user.username
+                    ? "@" + user.username
+                    : "Telegram User";
+
+
+            if(name){
+
+                document.getElementById(
+                    "profileName"
+                ).textContent =
+                    name;
+
+            }
+
+
+            document.getElementById(
+                "profileUsername"
+            ).textContent =
+                username;
+
+        }
+
+    }
+
+}catch(error){
+
+    console.log(
+        "Telegram profile unavailable"
+    );
+
+}
+
+
+/* =========================================================
+   INVITE SYSTEM
+========================================================= */
+
+function getInviteLink(){
+
+    let userId = "user";
+
+
+    try{
+
+        if(
+            window.Telegram &&
+            window.Telegram.WebApp &&
+            window.Telegram.WebApp
+                .initDataUnsafe &&
+            window.Telegram.WebApp
+                .initDataUnsafe.user
+        ){
+
+            userId =
+                window.Telegram.WebApp
+                    .initDataUnsafe.user.id;
+
+        }
+
+    }catch(error){
+
+        userId = "user";
+
+    }
+
+
+    return "https://t.me/koko_mini_bot?start=" +
+        encodeURIComponent(
+            "ref_" + userId
+        );
+
+}
+
+
+const inviteLinkElement =
+    document.getElementById(
+        "inviteLink"
+    );
+
+
+const inviteLink =
+    getInviteLink();
+
+
+inviteLinkElement.textContent =
+    inviteLink;
+
+
+/* COPY */
+
+document
+    .getElementById(
+        "copyInviteBtn"
+    )
+    .addEventListener(
+        "click",
+        async function(){
+
+            try{
+
+                await navigator.clipboard.writeText(
+                    inviteLink
+                );
+
+
+                this.textContent =
+                    "✓ Copied!";
+
+
+                setTimeout(
+                    ()=>{
+                        this.textContent =
+                            "Copy Invite Link";
+                    },
+                    1500
+                );
+
+            }catch(error){
+
+                alert(
+                    "Copy করা যায়নি।"
+                );
+
+            }
+
+        }
+    );
+
+
+/* SHARE */
+
+document
+    .getElementById(
+        "shareInviteBtn"
+    )
+    .addEventListener(
+        "click",
+        async function(){
+
+            try{
+
+                if(
+                    navigator.share
+                ){
+
+                    await navigator.share({
+
+                        title:
+                            "KOKO Mini App",
+
+                        text:
+                            "Join KOKO Mini App",
+
+                        url:
+                            inviteLink
+
+                    });
+
+                }else{
+
+                    await navigator.clipboard.writeText(
+                        inviteLink
+                    );
+
+                    alert(
+                        "Invite link copied!"
+                    );
+
+                }
+
+            }catch(error){
+
+                console.log(
+                    "Share cancelled"
+                );
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+updateUI();
+
+initGame();
+
+showPage("home");
+
+</script>
+
+</body>
+</html>
