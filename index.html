@@ -868,10 +868,18 @@ try {
     }
 } catch (e) {}
 
-// Load User Data from Database API
+// Load User Data from Database API with Referral Check
 async function loadUserData() {
     try {
-        const response = await fetch('/api/user/' + telegramId);
+        let apiUrl = '/api/user/' + telegramId;
+        
+        // যদি টেলিগ্রামের start_param-এ ref_ থাকে (যেমন: ref_123456)
+        if (startParam && startParam.startsWith("ref_")) {
+            const referrerId = startParam.replace("ref_", "");
+            apiUrl += "?ref=" + referrerId;
+        }
+
+        const response = await fetch(apiUrl);
         const data = await response.json();
         if (data.success && data.user) {
             score = data.user.score || 0;
