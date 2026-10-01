@@ -34,14 +34,25 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', UserSchema);
 
-// API: Get or Create User Data
+// API: Get or Create User Data (with Referral Handling)
 app.get('/api/user/:telegramId', async (req, res) => {
     try {
         const telegramId = req.params.telegramId;
+        const referrerId = req.query.ref; // লিংক থেকে রেফারের আইডি নেওয়া
+
         let user = await User.findOne({ telegramId });
         if (!user) {
+            // নতুন ইউজার তৈরি হচ্ছে
             user = new User({ telegramId });
             await user.save();
+
+            // যদি কেউ রেফার করে থাকে এবং নিজের লিঙ্কে নিজে না ঢুকে থাকে
+            if (referrerId && referrerId !== telegramId) {
+                await User.findOneAndUpdate(
+                    { telegramId: referrerId },
+                    { $inc: { referralCount: 1 } }
+                );
+            }
         }
         res.json({ success: true, user });
     } catch (err) {
@@ -65,11 +76,6 @@ app.post('/api/user/update', async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
-});
-
-// Sample API Route
-app.get('/api/status', (req, res) => {
-    res.json({ status: "success", message: "Kokobot Backend is running with full database features!" });
 });
 
 // Fallback to index.html for frontend routing
