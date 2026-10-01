@@ -9,7 +9,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "X-Telegram-Init-Data"]
 }));
 app.use(express.json());
-
+ 
 /* =========================
    FIREBASE ADMIN
 ========================= */
