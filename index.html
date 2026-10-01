@@ -484,7 +484,7 @@ button{
 }
 
 .wallet-card p{
-    color:#7e8ca5;
+    color:#7e8ba5;
     font-size:12px;
 }
 
@@ -868,18 +868,18 @@ try {
     }
 } catch (e) {}
 
-// Load User Data from Database API with Referral Check
+// Load User Data from Database API
 async function loadUserData() {
     try {
-        let apiUrl = '/api/user/' + telegramId;
-        
-        // যদি টেলিগ্রামের start_param-এ ref_ থাকে (যেমন: ref_123456)
+        // যদি কেউ রেফার লিংক দিয়ে প্রথমবার ঢোকে
         if (startParam && startParam.startsWith("ref_")) {
             const referrerId = startParam.replace("ref_", "");
-            apiUrl += "?ref=" + referrerId;
+            if (referrerId !== telegramId) {
+                await fetch('/api/user/referral/' + referrerId, { method: 'POST' });
+            }
         }
 
-        const response = await fetch(apiUrl);
+        const response = await fetch('/api/user/' + telegramId);
         const data = await response.json();
         if (data.success && data.user) {
             score = data.user.score || 0;
