@@ -1,9 +1,13 @@
 import express from "express";
 import admin from "firebase-admin";
 import crypto from "crypto";
-
+import cors from "cors";
 const app = express();
-
+app.use(cors({
+  origin: true,
+  credentials: true,
+  allowedHeaders: ["Content-Type", "X-Telegram-Init-Data"]
+}));
 app.use(express.json());
 
 /* =========================
