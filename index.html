@@ -840,11 +840,12 @@ button{
 const TOTAL_TASKS = 10;
 const REWARD_PER_GAME = 100;
 
-let score = Number(localStorage.getItem('koko_score') || 0);
-let currentTask = Number(localStorage.getItem('koko_task') || 0);
-let referralCount = Number(localStorage.getItem('koko_referral_count') || 0);
-let usernameClaimed = localStorage.getItem('koko_username_claimed') === 'true';
-let refClaimed = localStorage.getItem('koko_ref_claimed') === 'true';
+let score = 0;
+let currentTask = 0;
+let referralCount = 0;
+let usernameClaimed = false;
+let refClaimed = false;
+let username = "";
 
 let taskBusy = false;
 let inviteLink = "";
@@ -852,6 +853,7 @@ let inviteLink = "";
 let tg = null;
 let tgUser = null;
 let startParam = "";
+let telegramId = "device_user";
 
 try {
     if (window.Telegram && window.Telegram.WebApp) {
@@ -860,24 +862,50 @@ try {
         tg.expand();
         tgUser = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
         startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param ? tg.initDataUnsafe.start_param : "";
+        if (tgUser && tgUser.id) {
+            telegramId = String(tgUser.id);
+        }
     }
 } catch (e) {}
 
-// Check Referral on Load
-function checkReferralOnStart() {
-    if (startParam && startParam.startsWith("ref_")) {
-        const referrerId = startParam.replace("ref_", "");
-        const myId = tgUser ? String(tgUser.id) : "device_user";
-        
-        const hasCountedRef = localStorage.getItem('koko_has_been_referred');
-        if (referrerId !== myId && !hasCountedRef) {
-            let currentRefs = Number(localStorage.getItem('koko_ref_count_for_' + referrerId) || 0) + 1;
-            localStorage.setItem('koko_ref_count_for_' + referrerId, currentRefs);
-            localStorage.setItem('koko_has_been_referred', 'true');
-            
-            referralCount = 1; 
-            localStorage.setItem('koko_referral_count', referralCount);
+// Load User Data from Database API
+async function loadUserData() {
+    try {
+        const response = await fetch('/api/user/' + telegramId);
+        const data = await response.json();
+        if (data.success && data.user) {
+            score = data.user.score || 0;
+            currentTask = data.user.currentTask || 0;
+            referralCount = data.user.referralCount || 0;
+            usernameClaimed = data.user.usernameClaimed || false;
+            refClaimed = data.user.refClaimed || false;
+            username = data.user.username || "";
         }
+    } catch (err) {
+        console.error("Error loading user data:", err);
+    }
+    updateUI();
+    updateProfileUI();
+}
+
+// Save User Data to Database API
+async function saveData() {
+    try {
+        await fetch('/api/user/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                telegramId,
+                score,
+                currentTask,
+                referralCount,
+                usernameClaimed,
+                refClaimed,
+                username
+            })
+        });
+    } catch (err) {
+        console.error("Error saving user data:", err);
     }
 }
 
@@ -901,22 +929,12 @@ function showRewardedAd() {
     });
 }
 
-// Save to LocalStorage
-function saveData() {
-    localStorage.setItem('koko_score', score);
-    localStorage.setItem('koko_task', currentTask);
-    localStorage.setItem('koko_referral_count', referralCount);
-    localStorage.setItem('koko_username_claimed', usernameClaimed);
-    localStorage.setItem('koko_ref_claimed', refClaimed);
-}
-
-// Username Task Logic (১. Task এ ক্লিক -> ২. ইউজারনেম বক্স ও Set বাটন)
+// Username Task Logic
 function startUsernameTask() {
     if (usernameClaimed) {
         alert("You have already claimed this task!");
         return;
     }
-    // মডালের সাবমিট বাটনটির টেক্সট পরিবর্তন করে "Set" করে দেওয়া হলো
     document.querySelector('.btn-submit').textContent = "Set";
     document.getElementById("usernameModal").classList.add("show");
 }
@@ -925,44 +943,33 @@ function closeUsernameModal() {
     document.getElementById("usernameModal").classList.remove("show");
 }
 
-// ৩. Set এ ক্লিক করার পর ইউজারনেম সেভ হবে এবং বাটনটি Claim এ রূপান্তর হবে
-function setAndClaimUsername() {
+async function setAndClaimUsername() {
     const usernameVal = document.getElementById("usernameInput").value.trim();
     if (!usernameVal) {
         alert("Please enter a valid username!");
         return;
     }
 
-    let allUsernames = JSON.parse(localStorage.getItem('koko_all_usernames') || '[]');
-    if (allUsernames.includes(usernameVal.toLowerCase())) {
-        alert("This username is already taken! Please choose another one.");
-        return;
-    }
-
-    allUsernames.push(usernameVal.toLowerCase());
-    localStorage.setItem('koko_all_usernames', JSON.stringify(allUsernames));
-
+    username = usernameVal;
     closeUsernameModal();
     
-    // এখন টাস্ক কার্ডের বাটনটিকে "Claim" এ রূপান্তর করা হলো যাতে ইউজার ক্লাইমে ক্লিক করে অ্যাড দেখতে পারে
     const userBtn = document.getElementById("usernameTaskBtn");
     userBtn.textContent = "Claim";
     userBtn.onclick = executeUsernameClaim;
+    await saveData();
     alert("Username set successfully! Now click Claim to watch ad and get reward.");
 }
 
-// ৪. Claim এ ক্লিক করলে অ্যাড আসবে এবং ১০০ কয়েন যোগ হবে
 async function executeUsernameClaim() {
     await showRewardedAd();
 
     usernameClaimed = true;
     score += 100;
-    saveData();
+    await saveData();
     updateUI();
     alert("Success! +100 Coins added.");
 }
 
-// Invite Task Claim Logic
 async function claimRefTask() {
     if (refClaimed) {
         alert("You have already claimed this task!");
@@ -977,7 +984,7 @@ async function claimRefTask() {
 
     refClaimed = true;
     score += 100;
-    saveData();
+    await saveData();
     updateUI();
     alert("Success! +100 Coins added for inviting a friend.");
 }
@@ -1074,7 +1081,6 @@ function resetBoard() {
     lockBoard = false;
 }
 
-// Complete Task & Show Ad
 async function finishTask() {
     if (taskBusy) return;
     taskBusy = true;
@@ -1087,7 +1093,7 @@ async function finishTask() {
 
     score += REWARD_PER_GAME;
     currentTask++;
-    saveData();
+    await saveData();
     updateUI();
 
     message.className = "message success";
@@ -1127,7 +1133,6 @@ function updateUI() {
     document.getElementById("homeTasks").textContent = currentTask + "/" + TOTAL_TASKS;
     document.getElementById("referralCount").textContent = referralCount;
 
-    // Username Task Button State
     const userBtn = document.getElementById("usernameTaskBtn");
     if (usernameClaimed) {
         userBtn.textContent = "✓ Done";
@@ -1135,9 +1140,7 @@ function updateUI() {
         userBtn.disabled = true;
         userBtn.onclick = null;
     } else {
-        // যদি ইউজারনেম ইতিমধ্যে সেট করা হয়ে থাকে কিন্তু ক্লেইম করা বাকি থাকে
-        const isSetOnly = localStorage.getItem('koko_username_set_only') === 'true';
-        if(isSetOnly) {
+        if (username) {
             userBtn.textContent = "Claim";
             userBtn.onclick = executeUsernameClaim;
         } else {
@@ -1146,7 +1149,6 @@ function updateUI() {
         }
     }
 
-    // Invite Task Button State
     const refBtn = document.getElementById("refTaskBtn");
     if (refClaimed) {
         refBtn.textContent = "✓ Done";
@@ -1161,10 +1163,10 @@ function updateUI() {
 
 function updateProfileUI() {
     const name = tgUser ? ((tgUser.first_name || "") + " " + (tgUser.last_name || "")).trim() : "KOKO User";
-    const username = tgUser && tgUser.username ? "@" + tgUser.username : "Telegram User";
+    const tgUsername = tgUser && tgUser.username ? "@" + tgUser.username : (username ? "@" + username : "Telegram User");
 
     document.getElementById("profileName").textContent = name || "KOKO User";
-    document.getElementById("profileUsername").textContent = username;
+    document.getElementById("profileUsername").textContent = tgUsername;
 
     const avatar = document.getElementById("profileAvatar");
     if (tgUser && tgUser.photo_url) {
@@ -1201,9 +1203,7 @@ function shareInviteLink() {
 
 // Init
 function initializeKoko() {
-    checkReferralOnStart();
-    updateUI();
-    updateProfileUI();
+    loadUserData();
     showPage("home");
     inviteLink = getInviteLink();
     document.getElementById("inviteLink").textContent = inviteLink;
