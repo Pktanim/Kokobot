@@ -1230,10 +1230,10 @@ async function initializeKoko() {
         }
     }
 
+        inviteLink = getInviteLink();
+document.getElementById("inviteLink").textContent = inviteLink;
     loadUserData();
     showPage("home");
-    inviteLink = getInviteLink();
-    document.getElementById("inviteLink").textContent = inviteLink;
 }
 
 </script>
