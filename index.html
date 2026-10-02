@@ -609,7 +609,7 @@ button{
 }
 
 .profile-top{
-    display:flex;
+    dirplay:flex;
     align-items:center;
     gap:12px;
     margin-bottom:15px;
@@ -853,7 +853,7 @@ let inviteLink = "";
 let tg = null;
 let tgUser = null;
 let startParam = "";
-let telegramId = "device_user";
+let telegramId = "5138911811"; // টেস্ট করার জন্য তোমার রিয়েল আইডি ফিক্স করে দেওয়া হলো
 
 try {
     if (window.Telegram && window.Telegram.WebApp) {
@@ -1113,7 +1113,7 @@ async function finishTask() {
     }, 1200);
 }
 
-// Navigation (Invite পেজে গেলে অটো ডাটাবেজ ফেচ করে কাউন্ট আপডেট করার কোড যুক্ত করা হয়েছে)
+// Navigation
 async function showPage(page) {
     ['home', 'task', 'game', 'invite', 'ads', 'wallet'].forEach(name => {
         const el = document.getElementById(name + "Page");
@@ -1126,7 +1126,6 @@ async function showPage(page) {
     const nav = document.getElementById("nav" + page.charAt(0).toUpperCase() + page.slice(1));
     if (nav) nav.classList.add("active");
 
-    // যখনই ইউজার Invite পেজে ক্লিক করবে, তখন সার্ভার থেকে লাইভ রেফারেল কাউন্ট এনে দেখাবে
     if (page === 'invite') {
         try {
             const response = await fetch('/api/user/' + telegramId);
@@ -1198,7 +1197,7 @@ function closeProfile(event) {
 }
 
 function getInviteLink() {
-    let userId = tgUser && tgUser.id ? String(tgUser.id) : "12345";
+    let userId = tgUser && tgUser.id ? String(tgUser.id) : "5138911811";
     return "https://t.me/koko_mini_bot?startapp=ref_" + userId;
 }
 
@@ -1215,11 +1214,13 @@ function shareInviteLink() {
     }
 }
 
-// Init (Fixed with referral query parameter support)
+// Init
 async function initializeKoko() {
     const tg = window.Telegram.WebApp;
     const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
-    const telegramId = user ? String(user.id) : "12345";
+    if (user && user.id) {
+        telegramId = String(user.id);
+    }
     
     const startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
 
