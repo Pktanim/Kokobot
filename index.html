@@ -380,57 +380,6 @@ button{
     color:#72cfff;
 }
 
-/* INVITE */
-
-.invite-box{
-    background:#0b162b;
-    border:1px solid rgba(255,255,255,.07);
-    border-radius:22px;
-    padding:20px;
-}
-
-.ref-count{
-    text-align:center;
-    padding:12px 0 20px;
-}
-
-.ref-count strong{
-    display:block;
-    font-size:38px;
-    color:#58d7ff;
-}
-
-.ref-count span{
-    color:#7e8ba4;
-    font-size:12px;
-}
-
-.ref-link{
-    background:#050c19;
-    border-radius:12px;
-    padding:13px;
-    color:#91a1bc;
-    font-size:11px;
-    word-break:break-all;
-    margin-bottom:10px;
-}
-
-.action-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:9px;
-}
-
-.action-btn{
-    border:none;
-    border-radius:12px;
-    padding:13px;
-    background:#16294c;
-    color:white;
-    font-weight:700;
-    cursor:pointer;
-}
-
 /* ADS */
 
 .ad-box{
@@ -488,7 +437,7 @@ button{
     font-size:12px;
 }
 
-/* BOTTOM NAV */
+/* BOTTOM NAV (4 items) */
 
 .bottom-nav{
     position:fixed;
@@ -503,7 +452,7 @@ button{
     backdrop-filter:blur(20px);
     border:1px solid rgba(255,255,255,.08);
     display:grid;
-    grid-template-columns:repeat(5,1fr);
+    grid-template-columns:repeat(4,1fr);
     z-index:100;
     box-shadow:0 15px 40px rgba(0,0,0,.45);
 }
@@ -609,7 +558,7 @@ button{
 }
 
 .profile-top{
-    dirplay:flex;
+    display:flex;
     align-items:center;
     gap:12px;
     margin-bottom:15px;
@@ -711,16 +660,6 @@ button{
             </div>
             <button id="usernameTaskBtn" class="task-btn" onclick="startUsernameTask()">Task</button>
         </div>
-
-        <!-- Invite 1 Friend Task -->
-        <div class="task-card">
-            <div class="task-icon">👥</div>
-            <div class="task-info">
-                <strong>Invite 1 Friend</strong>
-                <span>Reward: +100 Coins</span>
-            </div>
-            <button id="refTaskBtn" class="task-btn" onclick="claimRefTask()">Task</button>
-        </div>
     </section>
 
     <!-- GAME PAGE -->
@@ -739,23 +678,6 @@ button{
 
         <div id="gameMessage" class="message">
             Find all 8 pairs to complete this task.
-        </div>
-    </section>
-
-    <!-- INVITE PAGE -->
-    <section id="invitePage" class="page">
-        <h2 class="section-title">Invite Friends</h2>
-        <p class="section-sub">Invite friends and unlock referral rewards.</p>
-        <div class="invite-box">
-            <div class="ref-count">
-                <strong id="referralCount">0</strong>
-                <span>Total Friends Invited</span>
-            </div>
-            <div id="inviteLink" class="ref-link">Loading referral link...</div>
-            <div class="action-row">
-                <button class="action-btn" onclick="copyInviteLink()">📋 Copy</button>
-                <button class="action-btn" onclick="shareInviteLink()">🚀 Share</button>
-            </div>
         </div>
     </section>
 
@@ -798,7 +720,7 @@ button{
     </div>
 </div>
 
-<!-- BOTTOM NAV -->
+<!-- BOTTOM NAV (4 Items) -->
 <div class="bottom-nav">
     <button id="navHome" class="nav-item active" onclick="showPage('home')">
         <span class="nav-icon">⌂</span>
@@ -807,10 +729,6 @@ button{
     <button id="navTask" class="nav-item" onclick="showPage('task')">
         <span class="nav-icon">🎯</span>
         <span>Task</span>
-    </button>
-    <button id="navInvite" class="nav-item" onclick="showPage('invite')">
-        <span class="nav-icon">👥</span>
-        <span>Invite</span>
     </button>
     <button id="navAds" class="nav-item" onclick="showPage('ads')">
         <span class="nav-icon">▶</span>
@@ -842,18 +760,14 @@ const REWARD_PER_GAME = 100;
 
 let score = 0;
 let currentTask = 0;
-let referralCount = 0;
 let usernameClaimed = false;
-let refClaimed = false;
 let username = "";
 
 let taskBusy = false;
-let inviteLink = "";
 
 let tg = null;
 let tgUser = null;
-let startParam = "";
-let telegramId = "5138911811"; // টেস্ট করার জন্য তোমার রিয়েল আইডি ফিক্স করে দেওয়া হলো
+let telegramId = "5138911811";
 
 try {
     if (window.Telegram && window.Telegram.WebApp) {
@@ -861,32 +775,11 @@ try {
         tg.ready();
         tg.expand();
         tgUser = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
-        startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param ? tg.initDataUnsafe.start_param : "";
         if (tgUser && tgUser.id) {
             telegramId = String(tgUser.id);
         }
     }
 } catch (e) {}
-
-// Load User Data from Database API
-async function loadUserData() {
-    try {
-        const response = await fetch('/api/user/' + telegramId);
-        const data = await response.json();
-        if (data.success && data.user) {
-            score = data.user.score || 0;
-            currentTask = data.user.currentTask || 0;
-            referralCount = data.user.referralCount || 0;
-            usernameClaimed = data.user.usernameClaimed || false;
-            refClaimed = data.user.refClaimed || false;
-            username = data.user.username || "";
-        }
-    } catch (err) {
-        console.error("Error loading user data:", err);
-    }
-    updateUI();
-    updateProfileUI();
-}
 
 // Save User Data to Database API
 async function saveData() {
@@ -898,9 +791,7 @@ async function saveData() {
                 telegramId,
                 score,
                 currentTask,
-                referralCount,
                 usernameClaimed,
-                refClaimed,
                 username
             })
         });
@@ -968,25 +859,6 @@ async function executeUsernameClaim() {
     await saveData();
     updateUI();
     alert("Success! +100 Coins added.");
-}
-
-async function claimRefTask() {
-    if (refClaimed) {
-        alert("You have already claimed this task!");
-        return;
-    }
-    if (referralCount < 1) {
-        alert("You need to invite at least 1 friend first!");
-        return;
-    }
-
-    await showRewardedAd();
-
-    refClaimed = true;
-    score += 100;
-    await saveData();
-    updateUI();
-    alert("Success! +100 Coins added for inviting a friend.");
 }
 
 // Game Logic
@@ -1114,8 +986,8 @@ async function finishTask() {
 }
 
 // Navigation
-async function showPage(page) {
-    ['home', 'task', 'game', 'invite', 'ads', 'wallet'].forEach(name => {
+function showPage(page) {
+    ['home', 'task', 'game', 'ads', 'wallet'].forEach(name => {
         const el = document.getElementById(name + "Page");
         if (el) el.classList.remove("active");
     });
@@ -1125,26 +997,12 @@ async function showPage(page) {
     document.querySelectorAll(".nav-item").forEach(item => item.classList.remove("active"));
     const nav = document.getElementById("nav" + page.charAt(0).toUpperCase() + page.slice(1));
     if (nav) nav.classList.add("active");
-
-    if (page === 'invite') {
-        try {
-            const response = await fetch('/api/user/' + telegramId);
-            const data = await response.json();
-            if (data.success && data.user) {
-                referralCount = data.user.referralCount || 0;
-                document.getElementById("referralCount").textContent = referralCount;
-            }
-        } catch (err) {
-            console.error("Error refreshing referral count:", err);
-        }
-    }
 }
 
 function updateUI() {
     document.getElementById("homeCoins").textContent = score;
     document.getElementById("walletCoins").textContent = score;
     document.getElementById("homeTasks").textContent = currentTask + "/" + TOTAL_TASKS;
-    document.getElementById("referralCount").textContent = referralCount;
 
     const userBtn = document.getElementById("usernameTaskBtn");
     if (usernameClaimed) {
@@ -1160,17 +1018,6 @@ function updateUI() {
             userBtn.textContent = "Task";
             userBtn.onclick = startUsernameTask;
         }
-    }
-
-    const refBtn = document.getElementById("refTaskBtn");
-    if (refClaimed) {
-        refBtn.textContent = "✓ Done";
-        refBtn.classList.add("done");
-        refBtn.disabled = true;
-    } else {
-        refBtn.textContent = "Task";
-        refBtn.classList.remove("done");
-        refBtn.disabled = false;
     }
 }
 
@@ -1196,24 +1043,6 @@ function closeProfile(event) {
     document.getElementById("profileOverlay").classList.remove("show");
 }
 
-function getInviteLink() {
-    let userId = tgUser && tgUser.id ? String(tgUser.id) : "5138911811";
-    return "https://t.me/koko_mini_bot?startapp=ref_" + userId;
-}
-
-function copyInviteLink() {
-    navigator.clipboard.writeText(inviteLink).then(() => alert("Referral link copied!"));
-}
-
-function shareInviteLink() {
-    const url = "https://t.me/share/url?url=" + encodeURIComponent(inviteLink) + "&text=" + encodeURIComponent("Join KOKO Memory Match!");
-    if (tg && tg.openTelegramLink) {
-        tg.openTelegramLink(url);
-    } else {
-        window.open(url, '_blank');
-    }
-}
-
 // Init
 async function initializeKoko() {
     const tg = window.Telegram.WebApp;
@@ -1221,34 +1050,19 @@ async function initializeKoko() {
     if (user && user.id) {
         telegramId = String(user.id);
     }
-    
-    const startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
 
     try {
-        let url = `/api/user/${telegramId}`;
-        if (startParam && startParam.startsWith('ref_')) {
-            const referrerId = startParam.replace('ref_', '');
-            if (referrerId !== telegramId) {
-                url += `?ref=${referrerId}`;
-            }
-        }
-
-        const response = await fetch(url);
+        const response = await fetch('/api/user/' + telegramId);
         const data = await response.json();
         if (data.success && data.user) {
             score = data.user.score || 0;
             currentTask = data.user.currentTask || 0;
-            referralCount = data.user.referralCount || 0;
             usernameClaimed = data.user.usernameClaimed || false;
-            refClaimed = data.user.refClaimed || false;
             username = data.user.username || "";
         }
     } catch (err) {
         console.error("Error initializing user data:", err);
     }
-
-    inviteLink = getInviteLink();
-    document.getElementById("inviteLink").textContent = inviteLink;
 
     updateUI();
     updateProfileUI();
