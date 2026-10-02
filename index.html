@@ -704,7 +704,7 @@ button{
 
         <!-- Set Username Task -->
         <div class="task-card">
-            <div class="task-icon">✏️</div>
+            <div class="task-icon">✏️️</div>
             <div class="task-info">
                 <strong>Set Username</strong>
                 <span>Reward: +100 Coins</span>
@@ -871,14 +871,6 @@ try {
 // Load User Data from Database API
 async function loadUserData() {
     try {
-        // যদি কেউ রেফার লিংক দিয়ে প্রথমবার ঢোকে
-        if (startParam && startParam.startsWith("ref_")) {
-            const referrerId = startParam.replace("ref_", "");
-            if (referrerId !== telegramId) {
-                await fetch('/api/user/referral/' + referrerId, { method: 'POST' });
-            }
-        }
-
         const response = await fetch('/api/user/' + telegramId);
         const data = await response.json();
         if (data.success && data.user) {
@@ -1210,7 +1202,6 @@ function shareInviteLink() {
 }
 
 // Init
-
 async function initializeKoko() {
     const tg = window.Telegram.WebApp;
     const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
@@ -1230,12 +1221,15 @@ async function initializeKoko() {
         }
     }
 
-        inviteLink = getInviteLink();
-document.getElementById("inviteLink").textContent = inviteLink;
-    loadUserData();
+    inviteLink = getInviteLink();
+    document.getElementById("inviteLink").textContent = inviteLink;
+
+    await loadUserData();
     showPage("home");
 }
 
+// Run initialization
+initializeKoko();
 </script>
 
 </body>
