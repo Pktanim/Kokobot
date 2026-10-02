@@ -1210,14 +1210,32 @@ function shareInviteLink() {
 }
 
 // Init
-function initializeKoko() {
+
+async function initializeKoko() {
+    const tg = window.Telegram.WebApp;
+    const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+    const telegramId = user ? String(user.id) : "12345";
+    
+    const startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
+
+    if (startParam && startParam.startsWith('ref_')) {
+        const referrerId = startParam.replace('ref_', '');
+        try {
+            await fetch(`/api/user/referral/${referrerId}`, {
+                method: 'POST'
+            });
+            console.log('Referral counted for:', referrerId);
+        } catch (err) {
+            console.error('Error sending referral:', err);
+        }
+    }
+
     loadUserData();
     showPage("home");
     inviteLink = getInviteLink();
     document.getElementById("inviteLink").textContent = inviteLink;
 }
 
-initializeKoko();
 </script>
 
 </body>
