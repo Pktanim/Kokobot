@@ -704,7 +704,7 @@ button{
 
         <!-- Set Username Task -->
         <div class="task-card">
-            <div class="task-icon">✏️️</div>
+            <div class="task-icon">✏</div>
             <div class="task-info">
                 <strong>Set Username</strong>
                 <span>Reward: +100 Coins</span>
@@ -1201,7 +1201,7 @@ function shareInviteLink() {
     }
 }
 
-// Init
+// Init (Fixed with referral query parameter support)
 async function initializeKoko() {
     const tg = window.Telegram.WebApp;
     const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
@@ -1209,22 +1209,34 @@ async function initializeKoko() {
     
     const startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
 
-    if (startParam && startParam.startsWith('ref_')) {
-        const referrerId = startParam.replace('ref_', '');
-        try {
-            await fetch(`/api/user/referral/${referrerId}`, {
-                method: 'POST'
-            });
-            console.log('Referral counted for:', referrerId);
-        } catch (err) {
-            console.error('Error sending referral:', err);
+    try {
+        let url = `/api/user/${telegramId}`;
+        if (startParam && startParam.startsWith('ref_')) {
+            const referrerId = startParam.replace('ref_', '');
+            if (referrerId !== telegramId) {
+                url += `?ref=${referrerId}`;
+            }
         }
+
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.success && data.user) {
+            score = data.user.score || 0;
+            currentTask = data.user.currentTask || 0;
+            referralCount = data.user.referralCount || 0;
+            usernameClaimed = data.user.usernameClaimed || false;
+            refClaimed = data.user.refClaimed || false;
+            username = data.user.username || "";
+        }
+    } catch (err) {
+        console.error("Error initializing user data:", err);
     }
 
     inviteLink = getInviteLink();
     document.getElementById("inviteLink").textContent = inviteLink;
 
-    await loadUserData();
+    updateUI();
+    updateProfileUI();
     showPage("home");
 }
 
