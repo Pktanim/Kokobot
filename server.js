@@ -34,15 +34,28 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', UserSchema);
 
-// API: Get or Create User Data
+// API: Get or Create User Data (with Referral Support)
 app.get('/api/user/:telegramId', async (req, res) => {
     try {
         const telegramId = req.params.telegramId;
+        const referrerId = req.query.ref; // ইউআরএল থেকে রেফারার আইডি ধরবে (যেমন: ?ref=12345)
+
         let user = await User.findOne({ telegramId });
+        
         if (!user) {
+            // নতুন ইউজার তৈরি করা হচ্ছে
             user = new User({ telegramId });
             await user.save();
+
+            // যদি রেফারার আইডি থাকে এবং তা নিজের আইডি না হয়, তবে যার লিংক সেটার রেফারেল কাউন্ট বাড়াবে
+            if (referrerId && referrerId !== telegramId) {
+                await User.findOneAndUpdate(
+                    { telegramId: referrerId },
+                    { $inc: { referralCount: 1 } }
+                );
+            }
         }
+
         res.json({ success: true, user });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
