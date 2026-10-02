@@ -1113,8 +1113,8 @@ async function finishTask() {
     }, 1200);
 }
 
-// Navigation
-function showPage(page) {
+// Navigation (Invite পেজে গেলে অটো ডাটাবেজ ফেচ করে কাউন্ট আপডেট করার কোড যুক্ত করা হয়েছে)
+async function showPage(page) {
     ['home', 'task', 'game', 'invite', 'ads', 'wallet'].forEach(name => {
         const el = document.getElementById(name + "Page");
         if (el) el.classList.remove("active");
@@ -1125,6 +1125,20 @@ function showPage(page) {
     document.querySelectorAll(".nav-item").forEach(item => item.classList.remove("active"));
     const nav = document.getElementById("nav" + page.charAt(0).toUpperCase() + page.slice(1));
     if (nav) nav.classList.add("active");
+
+    // যখনই ইউজার Invite পেজে ক্লিক করবে, তখন সার্ভার থেকে লাইভ রেফারেল কাউন্ট এনে দেখাবে
+    if (page === 'invite') {
+        try {
+            const response = await fetch('/api/user/' + telegramId);
+            const data = await response.json();
+            if (data.success && data.user) {
+                referralCount = data.user.referralCount || 0;
+                document.getElementById("referralCount").textContent = referralCount;
+            }
+        } catch (err) {
+            console.error("Error refreshing referral count:", err);
+        }
+    }
 }
 
 function updateUI() {
