@@ -311,24 +311,6 @@ button{
         );
 }
 
-.channel-task-card{
-    background:
-        linear-gradient(
-            135deg,
-            rgba(0,168,255,.10),
-            rgba(108,92,231,.08)
-        );
-}
-
-.channel-task-card .task-icon{
-    background:
-        linear-gradient(
-            135deg,
-            rgba(0,168,255,.25),
-            rgba(108,92,231,.25)
-        );
-}
-
 /* GAME */
 
 .game-header{
@@ -922,36 +904,6 @@ button{
 
         </div>
 
-
-        <!-- JOIN TELEGRAM CHANNEL -->
-        <div class="task-card channel-task-card">
-
-            <div class="task-icon">
-                📢
-            </div>
-
-            <div class="task-info">
-
-                <strong>
-                    Join Telegram Channel
-                </strong>
-
-                <span>
-                    Reward: +100 Coins
-                </span>
-
-            </div>
-
-            <button
-                id="joinChannelBtn"
-                class="task-btn"
-                onclick="startJoinChannelTask()"
-            >
-                Task
-            </button>
-
-        </div>
-
     </section>
 
 
@@ -1309,10 +1261,6 @@ const TOTAL_TASKS = 10;
 const REWARD_PER_GAME = 100;
 const USERNAME_REWARD = 100;
 const DAILY_CHECKIN_REWARD = 100;
-const JOIN_CHANNEL_REWARD = 100;
-
-const JOIN_CHANNEL_URL =
-    "https://t.me/tripsgame";
 
 
 /* ======================================================
@@ -1342,13 +1290,6 @@ let usernameAdCompleted = false;
 let dailyCheckinDone = false;
 let dailyCheckinPending = false;
 let dailyCheckinAdCompleted = false;
-
-
-/* JOIN CHANNEL */
-
-let joinChannelClaimed = false;
-let joinChannelAdCompleted = false;
-let joinChannelVerified = false;
 
 
 /* TELEGRAM ID */
@@ -1596,30 +1537,11 @@ function shareReferralLink(){
    MONETAG REWARDED AD
 ====================================================== */
 
-/*
- * IMPORTANT:
- *
- * No fake 15-second reward timer.
- *
- * We wait for Monetag's own result.
- *
- * IMPORTANT FOR THIS VERSION:
- *
- * No English error popup will be shown
- * when the ad completion signal is unavailable.
- */
-
 async function showRewardedAd(){
 
     let attempts = 0;
 
     const maxAttempts = 150;
-
-
-    /*
-     * Wait only for the SDK itself.
-     * This is NOT an ad-completion timer.
-     */
 
     while(
         typeof window.show_11926774 !== "function" &&
@@ -1637,11 +1559,6 @@ async function showRewardedAd(){
         attempts++;
     }
 
-
-    /*
-     * SDK unavailable.
-     */
-
     if(
         typeof window.show_11926774 !== "function"
     ){
@@ -1656,18 +1573,8 @@ async function showRewardedAd(){
 
     try{
 
-        console.log(
-            "KOKO: Opening Monetag Rewarded Interstitial..."
-        );
-
-
         const result =
             window.show_11926774();
-
-
-        /*
-         * Promise result.
-         */
 
         if(
             result &&
@@ -1676,57 +1583,17 @@ async function showRewardedAd(){
 
             await result;
 
-            console.log(
-                "KOKO: Monetag promise completed."
-            );
-
             return true;
         }
-
-
-        /*
-         * Direct TRUE result.
-         */
 
         if(result === true){
 
-            console.log(
-                "KOKO: Monetag returned TRUE."
-            );
-
             return true;
         }
 
-
-        /*
-         * Unknown return value.
-         *
-         * Do not reward automatically.
-         */
-
-        console.warn(
-            "KOKO: Monetag returned no verified completion value.",
-            result
-        );
-
         return false;
 
-
     }catch(error){
-
-        /*
-         * IMPORTANT:
-         *
-         * Do NOT show an English popup here.
-         *
-         * The caller will simply return the
-         * button to its previous state.
-         */
-
-        console.warn(
-            "KOKO: Monetag ad did not return a successful completion.",
-            error
-        );
 
         return false;
     }
@@ -1804,7 +1671,7 @@ async function startDailyCheckin(){
 
         const response =
             await fetch(
-                "/api/daily-checkin/start",
+                "/api/daily-check-in/start",
                 {
                     method:"POST",
                     headers:{
@@ -1925,7 +1792,7 @@ async function claimDailyCheckin(){
 
         const response =
             await fetch(
-                "/api/daily-checkin/claim",
+                "/api/daily-check-in/claim",
                 {
                     method:"POST",
                     headers:{
@@ -2001,342 +1868,6 @@ async function claimDailyCheckin(){
 
         btn.disabled = false;
         btn.textContent = "Claim";
-    }
-}
-
-
-/* ======================================================
-   JOIN TELEGRAM CHANNEL
-====================================================== */
-
-async function loadJoinChannelStatus(){
-
-    try{
-
-        const response =
-            await fetch(
-                "/api/tasks/join-channel/status/" +
-                encodeURIComponent(telegramId)
-            );
-
-        const data =
-            await response.json();
-
-
-        if(
-            response.ok &&
-            data.success
-        ){
-
-            joinChannelClaimed =
-                !!data.claimed;
-
-
-            if(joinChannelClaimed){
-
-                joinChannelAdCompleted = false;
-                joinChannelVerified = false;
-            }
-        }
-
-    }catch(error){
-
-        console.error(
-            "Join Channel status error:",
-            error
-        );
-    }
-
-    updateUI();
-}
-
-
-/* OPEN CHANNEL */
-
-function openJoinChannel(){
-
-    try{
-
-        if(
-            tg &&
-            typeof tg.openTelegramLink === "function"
-        ){
-
-            tg.openTelegramLink(
-                JOIN_CHANNEL_URL
-            );
-
-        }else{
-
-            window.open(
-                JOIN_CHANNEL_URL,
-                "_blank"
-            );
-        }
-
-    }catch(error){
-
-        window.open(
-            JOIN_CHANNEL_URL,
-            "_blank"
-        );
-    }
-}
-
-
-/* ======================================================
-   JOIN CHANNEL FLOW
-====================================================== */
-
-async function startJoinChannelTask(){
-
-    if(
-        taskBusy ||
-        joinChannelClaimed
-    ){
-
-        return;
-    }
-
-
-    /*
-     * FIRST CLICK:
-     * Open Telegram channel.
-     */
-
-    if(!joinChannelVerified){
-
-        openJoinChannel();
-
-        joinChannelVerified = true;
-
-        updateUI();
-
-        return;
-    }
-
-
-    /*
-     * SECOND CLICK:
-     * Verify membership.
-     */
-
-    const btn =
-        document.getElementById(
-            "joinChannelBtn"
-        );
-
-    taskBusy = true;
-
-    btn.disabled = true;
-
-    btn.textContent =
-        "Verify...";
-
-
-    try{
-
-        const verifyResponse =
-            await fetch(
-                "/api/tasks/join-channel/verify",
-                {
-                    method:"POST",
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-                    body:
-                        JSON.stringify({
-                            telegramId
-                        })
-                }
-            );
-
-
-        const verifyData =
-            await verifyResponse.json();
-
-        btn.textContent =
-            "Ad...";
-
-
-        const adFinished =
-            await showRewardedAd();
-
-
-        /*
-         * AD COMPLETION NOT CONFIRMED
-         */
-
-        if(!adFinished){
-
-            taskBusy = false;
-
-            joinChannelAdCompleted = false;
-
-            /*
-             * Keep Verify.
-             * No popup.
-             */
-
-            updateUI();
-
-            return;
-        }
-
-
-        /*
-         * AD SUCCESSFULLY COMPLETED.
-         *
-         * Now Claim becomes available.
-         */
-
-        joinChannelAdCompleted = true;
-
-        taskBusy = false;
-
-        updateUI();
-
-
-    }catch(error){
-
-        console.warn(
-            "Join Channel verification error:",
-            error
-        );
-
-        taskBusy = false;
-
-        joinChannelAdCompleted = false;
-
-        /*
-         * No English popup.
-         */
-
-        updateUI();
-    }
-}
-
-
-/* ======================================================
-   CLAIM JOIN CHANNEL REWARD
-====================================================== */
-
-async function claimJoinChannel(){
-
-    if(
-        taskBusy ||
-        !joinChannelAdCompleted ||
-        joinChannelClaimed
-    ){
-
-        return;
-    }
-
-
-    const btn =
-        document.getElementById(
-            "joinChannelBtn"
-        );
-
-
-    taskBusy = true;
-
-    btn.disabled = true;
-
-    btn.textContent =
-        "Claiming...";
-
-
-    try{
-
-        const response =
-            await fetch(
-                "/api/tasks/join-channel/claim",
-                {
-                    method:"POST",
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-                    body:
-                        JSON.stringify({
-                            telegramId
-                        })
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if(
-            !response.ok ||
-            !data.success
-        ){
-
-            taskBusy = false;
-
-            btn.disabled = false;
-
-            if(data.claimed){
-
-                joinChannelClaimed = true;
-                joinChannelAdCompleted = false;
-                joinChannelVerified = false;
-
-                updateUI();
-
-            }else{
-
-                btn.textContent =
-                    "Claim";
-            }
-
-            return;
-        }
-
-
-        /*
-         * Server score is source of truth.
-         */
-
-        if(
-            typeof data.score === "number"
-        ){
-
-            score =
-                data.score;
-        }
-
-
-        joinChannelClaimed = true;
-        joinChannelAdCompleted = false;
-        joinChannelVerified = false;
-
-        taskBusy = false;
-
-        updateUI();
-
-        alert(
-            "Success! +100 Coins added."
-        );
-
-
-    }catch(error){
-
-        console.error(
-            "Join Channel claim error:",
-            error
-        );
-
-        taskBusy = false;
-
-        btn.disabled = false;
-
-        btn.textContent =
-            "Claim";
     }
 }
 
@@ -2634,11 +2165,6 @@ async function setUsernameAndWatchAd(){
 
     }catch(error){
 
-        console.error(
-            "Username reserve error:",
-            error
-        );
-
         taskBusy = false;
 
         setBtn.disabled = false;
@@ -2813,11 +2339,6 @@ async function claimUsername(){
 
 
     }catch(error){
-
-        console.error(
-            "Username claim error:",
-            error
-        );
 
         taskBusy = false;
 
@@ -3120,11 +2641,6 @@ async function finishTask(){
 
         taskBusy = false;
 
-        /*
-         * IMPORTANT:
-         * No English error popup.
-         */
-
         message.className =
             "message";
 
@@ -3134,10 +2650,6 @@ async function finishTask(){
         return;
     }
 
-
-    /*
-     * Ad completion confirmed.
-     */
 
     score += REWARD_PER_GAME;
 
@@ -3413,98 +2925,6 @@ function updateUI(){
                 startUsernameTask;
         }
     }
-
-
-    /* JOIN CHANNEL */
-
-    const channelBtn =
-        document.getElementById(
-            "joinChannelBtn"
-        );
-
-
-    if(channelBtn){
-
-        channelBtn.classList.remove(
-            "claim",
-            "done"
-        );
-
-
-        /*
-         * ALREADY CLAIMED
-         */
-
-        if(joinChannelClaimed){
-
-            channelBtn.textContent =
-                "✓ Done";
-
-            channelBtn.classList.add(
-                "done"
-            );
-
-            channelBtn.disabled = true;
-
-            channelBtn.onclick = null;
-        }
-
-
-        /*
-         * AD FINISHED
-         */
-
-        else if(
-            joinChannelAdCompleted
-        ){
-
-            channelBtn.textContent =
-                "Claim";
-
-            channelBtn.classList.add(
-                "claim"
-            );
-
-            channelBtn.disabled = false;
-
-            channelBtn.onclick =
-                claimJoinChannel;
-        }
-
-
-        /*
-         * CHANNEL OPENED
-         */
-
-        else if(
-            joinChannelVerified
-        ){
-
-            channelBtn.textContent =
-                "Verify";
-
-            channelBtn.disabled = false;
-
-            channelBtn.onclick =
-                startJoinChannelTask;
-        }
-
-
-        /*
-         * FIRST STATE
-         */
-
-        else{
-
-            channelBtn.textContent =
-                "Task";
-
-            channelBtn.disabled = false;
-
-            channelBtn.onclick =
-                startJoinChannelTask;
-        }
-    }
 }
 
 
@@ -3654,12 +3074,6 @@ async function initializeKoko(){
     }
 
 
-    /*
-     * Load MongoDB user data.
-     *
-     * Existing score/currentTask remain.
-     */
-
     try{
 
         const response =
@@ -3699,13 +3113,6 @@ async function initializeKoko(){
             usernameAdCompleted = false;
 
 
-            joinChannelClaimed =
-                !!data.user.joinChannelClaimed;
-
-            joinChannelAdCompleted = false;
-            joinChannelVerified = false;
-
-
             if(
                 data.dailyCheckin
             ){
@@ -3742,8 +3149,6 @@ async function initializeKoko(){
     await loadReferralData();
 
     await loadDailyCheckinStatus();
-
-    await loadJoinChannelStatus();
 
     showPage("home");
 }
