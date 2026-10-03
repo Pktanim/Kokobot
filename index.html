@@ -806,21 +806,14 @@ button{
 
 
     <!-- HOME -->
-    <section
-        id="homePage"
-        class="page active"
-    >
+    <section id="homePage" class="page active">
 
         <div class="welcome">
-
-            <h1>
-                Welcome to KOKO 👋
-            </h1>
+            <h1>Welcome to KOKO 👋</h1>
 
             <p>
                 Match the cards and complete your tasks.
             </p>
-
         </div>
 
 
@@ -832,13 +825,9 @@ button{
 
             <div class="balance">
 
-                <span class="coin">
-                    🪙
-                </span>
+                <span class="coin">🪙</span>
 
-                <span id="homeCoins">
-                    0
-                </span>
+                <span id="homeCoins">0</span>
 
             </div>
 
@@ -894,10 +883,7 @@ button{
 
 
     <!-- EARN PAGE -->
-    <section
-        id="earnPage"
-        class="page"
-    >
+    <section id="earnPage" class="page">
 
         <h2 class="section-title">
             Earn
@@ -1001,10 +987,7 @@ button{
 
 
     <!-- GAME PAGE -->
-    <section
-        id="gamePage"
-        class="page"
-    >
+    <section id="gamePage" class="page">
 
         <div class="game-header">
 
@@ -1032,16 +1015,10 @@ button{
         </div>
 
 
-        <div
-            id="gameGrid"
-            class="game-grid"
-        ></div>
+        <div id="gameGrid" class="game-grid"></div>
 
 
-        <div
-            id="gameMessage"
-            class="message"
-        >
+        <div id="gameMessage" class="message">
             Find all 8 pairs to complete this task.
         </div>
 
@@ -1049,10 +1026,7 @@ button{
 
 
     <!-- ADS PAGE -->
-    <section
-        id="adsPage"
-        class="page"
-    >
+    <section id="adsPage" class="page">
 
         <h2 class="section-title">
             Rewarded Ads
@@ -1083,10 +1057,7 @@ button{
 
 
     <!-- INVITE PAGE -->
-    <section
-        id="invitePage"
-        class="page"
-    >
+    <section id="invitePage" class="page">
 
         <h2 class="section-title">
             Invite Friends
@@ -1173,10 +1144,7 @@ button{
 
 
     <!-- WALLET PAGE -->
-    <section
-        id="walletPage"
-        class="page"
-    >
+    <section id="walletPage" class="page">
 
         <h2 class="section-title">
             Wallet
@@ -1213,10 +1181,7 @@ button{
 
 
 <!-- USERNAME INPUT MODAL -->
-<div
-    id="usernameModal"
-    class="modal-overlay"
->
+<div id="usernameModal" class="modal-overlay">
 
     <div class="modal-box">
 
@@ -1375,6 +1340,10 @@ button{
 
 <script>
 
+/* ======================================================
+   CONSTANTS
+====================================================== */
+
 const TOTAL_TASKS = 10;
 
 const REWARD_PER_GAME = 100;
@@ -1498,30 +1467,33 @@ async function saveData(){
 
     try{
 
-        await fetch(
-            "/api/user/update",
-            {
+        const response =
+            await fetch(
+                "/api/user/update",
+                {
 
-                method:"POST",
+                    method:"POST",
 
-                headers:{
-                    "Content-Type":
-                        "application/json"
-                },
+                    headers:{
+                        "Content-Type":
+                            "application/json"
+                    },
 
-                body:
-                    JSON.stringify({
+                    body:
+                        JSON.stringify({
 
-                        telegramId,
+                            telegramId,
 
-                        score,
+                            score,
 
-                        currentTask,
+                            currentTask,
 
-                        usernameClaimed
-                    })
-            }
-        );
+                            usernameClaimed
+                        })
+                }
+            );
+
+        return response.ok;
 
     }catch(error){
 
@@ -1529,6 +1501,8 @@ async function saveData(){
             "Error saving user data:",
             error
         );
+
+        return false;
     }
 }
 
@@ -1703,29 +1677,28 @@ function shareReferralLink(){
 ====================================================== */
 
 /*
- * IMPORTANT:
+ * IMPORTANT
  *
- * There is NO fake timer here.
+ * No fake 15-second reward timer is used.
  *
- * Reward is allowed only when the Monetag
- * function successfully resolves.
+ * We wait for Monetag's returned Promise when
+ * the SDK provides one.
  *
- * If Monetag does not provide a completion
- * result, the app will NOT give the reward.
+ * Direct TRUE is also accepted.
+ *
+ * We NEVER add coins from a timer.
  */
 
 async function showRewardedAd(){
 
-    /*
-     * Wait for Monetag SDK to become available.
-     *
-     * This is only SDK loading time.
-     * It is NOT an advertisement timer.
-     */
-
     let attempts = 0;
 
     const maxAttempts = 150;
+
+
+    /* ----------------------------------------------
+       WAIT ONLY FOR SDK TO LOAD
+    ---------------------------------------------- */
 
     while(
         typeof window.show_11926774 !== "function" &&
@@ -1744,16 +1717,16 @@ async function showRewardedAd(){
     }
 
 
-    /*
-     * SDK not available.
-     */
+    /* ----------------------------------------------
+       SDK NOT AVAILABLE
+    ---------------------------------------------- */
 
     if(
         typeof window.show_11926774 !== "function"
     ){
 
         console.error(
-            "Monetag Rewarded Interstitial function is not available."
+            "KOKO: Monetag SDK is not available."
         );
 
         return false;
@@ -1768,7 +1741,9 @@ async function showRewardedAd(){
 
 
         /*
-         * Call Monetag.
+         * IMPORTANT:
+         *
+         * Call Monetag exactly once.
          */
 
         const result =
@@ -1776,10 +1751,7 @@ async function showRewardedAd(){
 
 
         /*
-         * Monetag Rewarded Interstitial should
-         * provide an async completion result.
-         *
-         * We NEVER use a fake delay here.
+         * Promise / Thenable
          */
 
         if(
@@ -1790,7 +1762,7 @@ async function showRewardedAd(){
             await result;
 
             console.log(
-                "KOKO: Monetag Rewarded Interstitial completed."
+                "KOKO: Monetag completion signal received."
             );
 
             return true;
@@ -1798,8 +1770,7 @@ async function showRewardedAd(){
 
 
         /*
-         * Some SDK versions may return a direct
-         * boolean result.
+         * Direct TRUE
          */
 
         if(result === true){
@@ -1813,13 +1784,13 @@ async function showRewardedAd(){
 
 
         /*
-         * Unknown result.
+         * No reliable completion signal.
          *
-         * Do NOT reward.
+         * Do NOT award automatically.
          */
 
-        console.error(
-            "KOKO: Monetag returned an unsupported completion result.",
+        console.warn(
+            "KOKO: Monetag did not return a completion signal.",
             result
         );
 
@@ -1992,15 +1963,11 @@ async function startDailyCheckin(){
 
             btn.disabled = false;
 
-            btn.textContent =
-                "Task";
-
             dailyCheckinAdCompleted =
                 false;
 
-            alert(
-                "The rewarded ad was not completed. Please try again."
-            );
+            btn.textContent =
+                "Task";
 
             return;
         }
@@ -2027,10 +1994,6 @@ async function startDailyCheckin(){
 
         btn.textContent =
             "Task";
-
-        alert(
-            "Something went wrong. Please try again."
-        );
     }
 }
 
@@ -2162,10 +2125,6 @@ async function claimDailyCheckin(){
 
         btn.textContent =
             "Claim";
-
-        alert(
-            "Something went wrong. Please try again."
-        );
     }
 }
 
@@ -2222,9 +2181,9 @@ async function loadJoinChannelStatus(){
 }
 
 
-/*
- * Open Telegram channel.
- */
+/* ======================================================
+   OPEN TELEGRAM CHANNEL
+====================================================== */
 
 function openJoinChannel(){
 
@@ -2232,7 +2191,8 @@ function openJoinChannel(){
 
         if(
             tg &&
-            typeof tg.openTelegramLink === "function"
+            typeof tg.openTelegramLink ===
+                "function"
         ){
 
             tg.openTelegramLink(
@@ -2257,27 +2217,9 @@ function openJoinChannel(){
 }
 
 
-/*
- * JOIN CHANNEL FLOW
- *
- * Task
- *   ↓
- * Open Telegram Channel
- *   ↓
- * Verify
- *   ↓
- * Telegram membership check
- *   ↓
- * Monetag Rewarded Interstitial
- *   ↓
- * Ad completion
- *   ↓
- * Claim
- *   ↓
- * +100 Coins
- *   ↓
- * Done
- */
+/* ======================================================
+   JOIN CHANNEL TASK
+====================================================== */
 
 async function startJoinChannelTask(){
 
@@ -2291,9 +2233,9 @@ async function startJoinChannelTask(){
 
 
     /*
-     * FIRST CLICK
+     * FIRST STEP
      *
-     * Open channel.
+     * Open Telegram channel.
      */
 
     if(!joinChannelVerified){
@@ -2310,7 +2252,7 @@ async function startJoinChannelTask(){
 
 
     /*
-     * SECOND CLICK
+     * SECOND STEP
      *
      * Verify membership.
      */
@@ -2319,6 +2261,7 @@ async function startJoinChannelTask(){
         document.getElementById(
             "joinChannelBtn"
         );
+
 
     taskBusy = true;
 
@@ -2371,19 +2314,19 @@ async function startJoinChannelTask(){
             btn.textContent =
                 "Verify";
 
-            alert(
-                verifyData.error ||
-                "Please join the Telegram channel first."
-            );
+            /*
+             * No annoying English alert.
+             * Keep Verify state.
+             */
 
             return;
         }
 
 
         /*
-         * JOINED
+         * USER IS JOINED.
          *
-         * Now show real Monetag ad.
+         * Open Monetag.
          */
 
         btn.textContent =
@@ -2395,7 +2338,12 @@ async function startJoinChannelTask(){
 
 
         /*
-         * AD NOT COMPLETED
+         * IMPORTANT:
+         *
+         * If Monetag reports failure,
+         * do NOT show English error popup.
+         *
+         * User can simply press Verify again.
          */
 
         if(!adFinished){
@@ -2407,26 +2355,19 @@ async function startJoinChannelTask(){
             joinChannelAdCompleted =
                 false;
 
-            /*
-             * Keep Verify.
-             * User can try again.
-             */
-
             btn.textContent =
                 "Verify";
 
-            alert(
-                "The rewarded ad was not completed. Please watch the ad fully and try again."
-            );
+            updateUI();
 
             return;
         }
 
 
         /*
-         * AD COMPLETED
+         * MONETAG COMPLETED
          *
-         * Only now Claim becomes available.
+         * Claim becomes available ONLY now.
          */
 
         joinChannelAdCompleted =
@@ -2440,7 +2381,7 @@ async function startJoinChannelTask(){
     }catch(error){
 
         console.error(
-            "Join Channel verify error:",
+            "Join Channel task error:",
             error
         );
 
@@ -2451,16 +2392,17 @@ async function startJoinChannelTask(){
         btn.textContent =
             "Verify";
 
-        alert(
-            "Something went wrong. Please try again."
-        );
+        joinChannelAdCompleted =
+            false;
+
+        updateUI();
     }
 }
 
 
-/*
- * CLAIM JOIN CHANNEL REWARD
- */
+/* ======================================================
+   CLAIM JOIN CHANNEL
+====================================================== */
 
 async function claimJoinChannel(){
 
@@ -2514,6 +2456,10 @@ async function claimJoinChannel(){
             await response.json();
 
 
+        /*
+         * SERVER ERROR
+         */
+
         if(
             !response.ok ||
             !data.success
@@ -2523,6 +2469,10 @@ async function claimJoinChannel(){
 
             btn.disabled = false;
 
+
+            /*
+             * Already claimed.
+             */
 
             if(data.claimed){
 
@@ -2537,23 +2487,19 @@ async function claimJoinChannel(){
 
                 updateUI();
 
-            }else{
-
-                btn.textContent =
-                    "Claim";
-
-                alert(
-                    data.error ||
-                    "Unable to claim reward."
-                );
+                return;
             }
+
+
+            btn.textContent =
+                "Claim";
 
             return;
         }
 
 
         /*
-         * Server score is the source of truth.
+         * SERVER IS SOURCE OF TRUTH.
          */
 
         if(
@@ -2598,10 +2544,6 @@ async function claimJoinChannel(){
 
         btn.textContent =
             "Claim";
-
-        alert(
-            "Something went wrong. Please try again."
-        );
     }
 }
 
@@ -2980,7 +2922,7 @@ async function runUsernameAd(){
             "Watch Ad";
 
         showUsernameError(
-            "The rewarded ad was not completed. Please try again."
+            "Ad could not be completed."
         );
 
         return;
@@ -3138,10 +3080,6 @@ async function claimUsername(){
 
         userBtn.textContent =
             "Claim";
-
-        alert(
-            "Something went wrong. Please try again."
-        );
     }
 }
 
@@ -3440,12 +3378,9 @@ function resetBoard(){
 }
 
 
-/*
- * Finish Memory Match task.
- *
- * IMPORTANT:
- * No reward is added before the ad finishes.
- */
+/* ======================================================
+   FINISH MEMORY TASK
+====================================================== */
 
 async function finishTask(){
 
@@ -3478,19 +3413,17 @@ async function finishTask(){
             false;
 
         message.className =
-            "message error";
+            "message";
 
         message.textContent =
-            "The rewarded ad was not completed. Please try again.";
+            "Ad was not completed. Please try again.";
 
         return;
     }
 
 
     /*
-     * AD COMPLETED
-     *
-     * Only now give +100.
+     * ONLY AFTER AD COMPLETION
      */
 
     score +=
@@ -3499,12 +3432,7 @@ async function finishTask(){
     currentTask++;
 
 
-    /*
-     * Save immediately to MongoDB.
-     */
-
     await saveData();
-
 
     updateUI();
 
@@ -3657,7 +3585,7 @@ function updateUI(){
 
 
     /*
-     * GAME TASK COUNT
+     * TASK COUNT
      */
 
     document
@@ -3671,7 +3599,7 @@ function updateUI(){
 
 
     /* ==================================================
-       DAILY CHECK-IN
+       DAILY
     ================================================== */
 
     const dailyBtn =
@@ -3821,7 +3749,7 @@ function updateUI(){
 
 
         /*
-         * ALREADY CLAIMED
+         * CLAIMED
          */
 
         if(joinChannelClaimed){
@@ -3838,16 +3766,18 @@ function updateUI(){
 
             channelBtn.onclick =
                 null;
+
+            return;
         }
 
 
         /*
-         * AD FINISHED
+         * AD COMPLETED
+         *
+         * CLAIM AVAILABLE
          */
 
-        else if(
-            joinChannelAdCompleted
-        ){
+        if(joinChannelAdCompleted){
 
             channelBtn.textContent =
                 "Claim";
@@ -3861,6 +3791,8 @@ function updateUI(){
 
             channelBtn.onclick =
                 claimJoinChannel;
+
+            return;
         }
 
 
@@ -3868,9 +3800,7 @@ function updateUI(){
          * CHANNEL OPENED
          */
 
-        else if(
-            joinChannelVerified
-        ){
+        if(joinChannelVerified){
 
             channelBtn.textContent =
                 "Verify";
@@ -3880,6 +3810,8 @@ function updateUI(){
 
             channelBtn.onclick =
                 startJoinChannelTask;
+
+            return;
         }
 
 
@@ -3887,17 +3819,14 @@ function updateUI(){
          * FIRST STATE
          */
 
-        else{
+        channelBtn.textContent =
+            "Task";
 
-            channelBtn.textContent =
-                "Task";
+        channelBtn.disabled =
+            false;
 
-            channelBtn.disabled =
-                false;
-
-            channelBtn.onclick =
-                startJoinChannelTask;
-        }
+        channelBtn.onclick =
+            startJoinChannelTask;
     }
 }
 
@@ -4013,7 +3942,7 @@ function closeProfile(event){
 async function initializeKoko(){
 
     /*
-     * Telegram user
+     * TELEGRAM USER
      */
 
     try{
@@ -4057,10 +3986,7 @@ async function initializeKoko(){
 
 
     /*
-     * Load MongoDB user data.
-     *
-     * Existing score/currentTask are loaded.
-     * They are NOT reset.
+     * LOAD MONGODB USER
      */
 
     try{
@@ -4083,14 +4009,22 @@ async function initializeKoko(){
             data.user
         ){
 
+            /*
+             * IMPORTANT:
+             * Existing values are loaded.
+             * Nothing is reset.
+             */
+
             score =
-                data.user.score ||
-                0;
+                Number(
+                    data.user.score || 0
+                );
 
 
             currentTask =
-                data.user.currentTask ||
-                0;
+                Number(
+                    data.user.currentTask || 0
+                );
 
 
             usernameClaimed =
@@ -4128,7 +4062,7 @@ async function initializeKoko(){
 
 
             /*
-             * DAILY CHECK-IN
+             * DAILY
              */
 
             if(
