@@ -39,7 +39,6 @@ const UserSchema = new mongoose.Schema({
     },
 
     // KOKO custom username
-    // Unique index is created below.
     appUsername: {
         type: String
     },
@@ -68,6 +67,16 @@ const UserSchema = new mongoose.Schema({
     referralCount: {
         type: Number,
         default: 0
+    },
+
+    // ==================================================
+    // Daily Check-in System
+    // ==================================================
+
+    // Last date on which Daily Check-in was claimed
+    dailyCheckinClaimedAt: {
+        type: Date,
+        default: null
     }
 
 });
@@ -75,9 +84,6 @@ const UserSchema = new mongoose.Schema({
 // ===============================
 // MongoDB Unique Username Index
 // ===============================
-// IMPORTANT:
-// appUsername index is declared ONLY here.
-// This prevents duplicate schema index warning.
 UserSchema.index(
     { appUsername: 1 },
     {
@@ -568,6 +574,279 @@ app.post('/api/user/update', async (req, res) => {
 });
 
 // ======================================================
+// DAILY CHECK-IN SYSTEM
+// ======================================================
+
+// ======================================================
+// API: Daily Check-in Status
+// ======================================================
+app.get(
+    '/api/daily-checkin/:telegramId',
+    async (req, res) => {
+
+        try {
+
+            const telegramId =
+                String(req.params.telegramId);
+
+            const user =
+                await User.findOne({
+                    telegramId
+                });
+
+            if (!user) {
+
+                return res.status(404).json({
+                    success: false,
+                    error: "User not found"
+                });
+            }
+
+            const now = new Date();
+
+            const startOfToday =
+                new Date(now);
+
+            startOfToday.setHours(
+                0,
+                0,
+                0,
+                0
+            );
+
+            const alreadyClaimed =
+                user.dailyCheckinClaimedAt &&
+                user.dailyCheckinClaimedAt >=
+                    startOfToday;
+
+            return res.json({
+
+                success: true,
+
+                claimedToday:
+                    !!alreadyClaimed,
+
+                claimedAt:
+                    user.dailyCheckinClaimedAt,
+
+                score:
+                    user.score
+            });
+
+        } catch (err) {
+
+            console.error(
+                "Daily Check-in status error:",
+                err
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    "Server error"
+            });
+        }
+    }
+);
+
+// ======================================================
+// API: Daily Check-in Claim
+// ======================================================
+//
+// FLOW:
+//
+// Earn
+//   ↓
+// Daily Check-in → Task
+//   ↓
+// Monetag Ad
+//   ↓
+// 15 seconds
+//   ↓
+// Claim
+//   ↓
+// +100 Coins
+//   ↓
+// ✓ Done
+//
+// MongoDB prevents multiple claims
+// on the same day.
+// ======================================================
+app.post(
+    '/api/daily-checkin/claim',
+    async (req, res) => {
+
+        try {
+
+            const {
+                telegramId
+            } = req.body;
+
+            if (!telegramId) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        "Telegram ID is required"
+                });
+            }
+
+            const telegramUserId =
+                String(telegramId);
+
+            const now =
+                new Date();
+
+            // Start of today
+            const startOfToday =
+                new Date(now);
+
+            startOfToday.setHours(
+                0,
+                0,
+                0,
+                0
+            );
+
+            // Atomic update.
+            //
+            // If the user already claimed today,
+            // this query will NOT match.
+            const user =
+                await User.findOneAndUpdate(
+
+                    {
+                        telegramId:
+                            telegramUserId,
+
+                        $or: [
+
+                            {
+                                dailyCheckinClaimedAt:
+                                    {
+                                        $exists:
+                                            false
+                                    }
+                            },
+
+                            {
+                                dailyCheckinClaimedAt:
+                                    null
+                            },
+
+                            {
+                                dailyCheckinClaimedAt:
+                                    {
+                                        $lt:
+                                            startOfToday
+                                    }
+                            }
+
+                        ]
+                    },
+
+                    {
+                        $set: {
+
+                            dailyCheckinClaimedAt:
+                                now
+                        },
+
+                        $inc: {
+
+                            score:
+                                100
+
+                        }
+                    },
+
+                    {
+                        new: true
+                    }
+                );
+
+            // ==========================================
+            // Claim successful
+            // ==========================================
+            if (user) {
+
+                console.log(
+                    `✅ Daily Check-in claimed by ${telegramUserId}`
+                );
+
+                console.log(
+                    `🪙 +100 coins awarded to ${telegramUserId}`
+                );
+
+                return res.json({
+
+                    success: true,
+
+                    claimedToday:
+                        true,
+
+                    reward:
+                        100,
+
+                    score:
+                        user.score,
+
+                    claimedAt:
+                        user.dailyCheckinClaimedAt
+                });
+            }
+
+            // ==========================================
+            // User not found OR already claimed today
+            // ==========================================
+            const existingUser =
+                await User.findOne({
+                    telegramId:
+                        telegramUserId
+                });
+
+            if (!existingUser) {
+
+                return res.status(404).json({
+                    success: false,
+                    error:
+                        "User not found"
+                });
+            }
+
+            return res.status(409).json({
+
+                success: false,
+
+                claimedToday:
+                    true,
+
+                error:
+                    "Daily Check-in already claimed today",
+
+                score:
+                    existingUser.score
+            });
+
+        } catch (err) {
+
+            console.error(
+                "Daily Check-in claim error:",
+                err
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                error:
+                    "Server error"
+            });
+        }
+    }
+);
+
+// ======================================================
 // USERNAME SYSTEM
 // ======================================================
 
@@ -590,7 +869,8 @@ app.post(
                 return res.status(400).json({
                     success: false,
                     available: false,
-                    error: "Telegram ID is required"
+                    error:
+                        "Telegram ID is required"
                 });
             }
 
@@ -603,7 +883,8 @@ app.post(
                 return res.status(400).json({
                     success: false,
                     available: false,
-                    error: "Username is required"
+                    error:
+                        "Username is required"
                 });
             }
 
@@ -633,7 +914,8 @@ app.post(
                 return res.status(404).json({
                     success: false,
                     available: false,
-                    error: "User not found"
+                    error:
+                        "User not found"
                 });
             }
 
@@ -641,16 +923,21 @@ app.post(
             if (
                 currentUser.appUsername &&
                 currentUser.appUsername ===
-                normalizedUsername
+                    normalizedUsername
             ) {
 
                 return res.json({
+
                     success: true,
+
                     available: true,
+
                     alreadyOwned:
                         !!currentUser.usernameClaimed,
+
                     reserved:
                         !currentUser.usernameClaimed,
+
                     username:
                         currentUser.appUsername
                 });
@@ -670,8 +957,11 @@ app.post(
                 );
 
                 return res.status(409).json({
+
                     success: false,
+
                     available: false,
+
                     error:
                         "Please choose another username"
                 });
@@ -682,8 +972,11 @@ app.post(
             );
 
             return res.json({
+
                 success: true,
+
                 available: true,
+
                 username:
                     normalizedUsername
             });
@@ -696,8 +989,11 @@ app.post(
             );
 
             return res.status(500).json({
+
                 success: false,
+
                 available: false,
+
                 error:
                     "Server error while checking username"
             });
@@ -708,18 +1004,16 @@ app.post(
 // ======================================================
 // API: Username Reserve / Claim
 // ======================================================
-// FLOW:
 //
 // action = "reserve"
-// ------------------
-// Saves/reserves username immediately.
-// NO coins are given.
+// Saves/reserves username.
+// NO coins.
 //
 // action = "claim"
-// ----------------
-// Confirms reserved username and gives +100 coins.
+// Confirms username and gives +100 coins.
 //
-// Frontend flow:
+// FLOW:
+//
 // Task → Set → Reserve → Ad → Claim → +100 → Done
 // ======================================================
 app.post(
@@ -830,18 +1124,24 @@ app.post(
                         );
 
                         return res.json({
+
                             success: true,
+
                             reserved: true,
+
                             username:
                                 user.appUsername,
+
                             score:
                                 user.score
                         });
                     }
 
-                    // User is trying to reserve another username
+                    // Another username
                     return res.status(409).json({
+
                         success: false,
+
                         error:
                             "Please choose another username"
                     });
@@ -850,8 +1150,6 @@ app.post(
                 // ==================================================
                 // ATOMIC RESERVATION
                 // ==================================================
-                // This prevents two users from reserving
-                // the same username at the same time.
                 const reservedUser =
                     await User.findOneAndUpdate(
 
@@ -863,22 +1161,30 @@ app.post(
                                 false,
 
                             $or: [
+
                                 {
                                     appUsername: {
-                                        $exists: false
+                                        $exists:
+                                            false
                                     }
                                 },
+
                                 {
-                                    appUsername: null
+                                    appUsername:
+                                        null
                                 },
+
                                 {
-                                    appUsername: ''
+                                    appUsername:
+                                        ''
                                 }
+
                             ]
                         },
 
                         {
                             $set: {
+
                                 appUsername:
                                     normalizedUsername
                             }
@@ -893,7 +1199,9 @@ app.post(
                 if (!reservedUser) {
 
                     return res.status(409).json({
+
                         success: false,
+
                         error:
                             "Please choose another username"
                     });
@@ -936,35 +1244,45 @@ app.post(
                     ) {
 
                         return res.json({
+
                             success: true,
-                            alreadyClaimed: true,
+
+                            alreadyClaimed:
+                                true,
+
                             username:
                                 user.appUsername,
+
                             usernameClaimed:
                                 true,
+
                             score:
                                 user.score
                         });
                     }
 
                     return res.status(409).json({
+
                         success: false,
+
                         error:
                             "Username has already been claimed"
                     });
                 }
 
                 // ==================================================
-                // Verify that this username belongs to this user
+                // Verify username belongs to user
                 // ==================================================
                 if (
                     !user.appUsername ||
                     user.appUsername !==
-                    normalizedUsername
+                        normalizedUsername
                 ) {
 
                     return res.status(409).json({
+
                         success: false,
+
                         error:
                             "Username reservation not found"
                     });
@@ -988,13 +1306,17 @@ app.post(
                         },
 
                         {
+
                             $set: {
+
                                 usernameClaimed:
                                     true
                             },
 
                             $inc: {
-                                score: 100
+
+                                score:
+                                    100
                             }
                         },
 
@@ -1006,7 +1328,9 @@ app.post(
                 if (!claimedUser) {
 
                     return res.status(409).json({
+
                         success: false,
+
                         error:
                             "Unable to claim username"
                     });
@@ -1039,7 +1363,9 @@ app.post(
             // Invalid Action
             // ==================================================
             return res.status(400).json({
+
                 success: false,
+
                 error:
                     "Invalid action"
             });
@@ -1057,7 +1383,9 @@ app.post(
                 );
 
                 return res.status(409).json({
+
                     success: false,
+
                     error:
                         "Please choose another username"
                 });
@@ -1069,7 +1397,9 @@ app.post(
             );
 
             return res.status(500).json({
+
                 success: false,
+
                 error:
                     "Server error"
             });
@@ -1097,7 +1427,9 @@ app.get(
             if (!user) {
 
                 return res.status(404).json({
+
                     success: false,
+
                     error:
                         "User not found"
                 });
@@ -1127,8 +1459,11 @@ app.get(
             );
 
             return res.status(500).json({
+
                 success: false,
-                error: err.message
+
+                error:
+                    err.message
             });
         }
     }
@@ -1157,15 +1492,19 @@ async function setupTelegramWebhook() {
             await fetch(
                 `https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`,
                 {
+
                     method: 'POST',
 
                     headers: {
+
                         'Content-Type':
                             'application/json'
                     },
 
                     body: JSON.stringify({
-                        url: webhookUrl
+
+                        url:
+                            webhookUrl
                     })
                 }
             );
