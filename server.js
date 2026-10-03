@@ -1248,7 +1248,7 @@ app.post(
                     "getChatMember",
                     {
                         chat_id:
-                            CHANNEL_USERNAME,
+                            "@tripsgame",
 
                         user_id:
                             Number(
