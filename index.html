@@ -2156,39 +2156,6 @@ async function startJoinChannelTask(){
         const verifyData =
             await verifyResponse.json();
 
-
-        /*
-         * NOT JOINED
-         */
-
-        if(
-            !verifyResponse.ok ||
-            !verifyData.success ||
-            !verifyData.joined
-        ){
-
-            taskBusy = false;
-
-            btn.disabled = false;
-
-            btn.textContent =
-                "Verify";
-
-            /*
-             * IMPORTANT:
-             * No English error popup.
-             */
-
-            return;
-        }
-
-
-        /*
-         * USER IS JOINED.
-         *
-         * Show Monetag.
-         */
-
         btn.textContent =
             "Ad...";
 
