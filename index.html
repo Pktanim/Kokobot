@@ -780,7 +780,6 @@ button{
 <div class="app">
 
     <!-- TOP BAR -->
-
     <div class="topbar">
 
         <div class="brand">
@@ -807,7 +806,6 @@ button{
 
 
     <!-- HOME -->
-
     <section
         id="homePage"
         class="page active"
@@ -896,7 +894,6 @@ button{
 
 
     <!-- EARN PAGE -->
-
     <section
         id="earnPage"
         class="page"
@@ -912,7 +909,6 @@ button{
 
 
         <!-- DAILY CHECK-IN -->
-
         <div class="task-card daily-task-card">
 
             <div class="task-icon">
@@ -943,7 +939,6 @@ button{
 
 
         <!-- SET USERNAME -->
-
         <div class="task-card">
 
             <div class="task-icon">
@@ -974,7 +969,6 @@ button{
 
 
         <!-- JOIN TELEGRAM CHANNEL -->
-
         <div class="task-card channel-task-card">
 
             <div class="task-icon">
@@ -1007,7 +1001,6 @@ button{
 
 
     <!-- GAME PAGE -->
-
     <section
         id="gamePage"
         class="page"
@@ -1056,7 +1049,6 @@ button{
 
 
     <!-- ADS PAGE -->
-
     <section
         id="adsPage"
         class="page"
@@ -1091,7 +1083,6 @@ button{
 
 
     <!-- INVITE PAGE -->
-
     <section
         id="invitePage"
         class="page"
@@ -1182,7 +1173,6 @@ button{
 
 
     <!-- WALLET PAGE -->
-
     <section
         id="walletPage"
         class="page"
@@ -1223,7 +1213,6 @@ button{
 
 
 <!-- USERNAME INPUT MODAL -->
-
 <div
     id="usernameModal"
     class="modal-overlay"
@@ -1277,7 +1266,6 @@ button{
 
 
 <!-- BOTTOM NAV -->
-
 <div class="bottom-nav">
 
     <button
@@ -1333,7 +1321,6 @@ button{
 
 
 <!-- PROFILE POPUP -->
-
 <div
     id="profileOverlay"
     class="profile-overlay"
@@ -1715,14 +1702,34 @@ function shareReferralLink(){
    MONETAG REWARDED AD
 ====================================================== */
 
+/*
+ * IMPORTANT:
+ *
+ * There is NO fake timer here.
+ *
+ * Reward is allowed only when the Monetag
+ * function successfully resolves.
+ *
+ * If Monetag does not provide a completion
+ * result, the app will NOT give the reward.
+ */
+
 async function showRewardedAd(){
+
+    /*
+     * Wait for Monetag SDK to become available.
+     *
+     * This is only SDK loading time.
+     * It is NOT an advertisement timer.
+     */
 
     let attempts = 0;
 
+    const maxAttempts = 150;
+
     while(
-        typeof window.show_11926774 !==
-            "function" &&
-        attempts < 100
+        typeof window.show_11926774 !== "function" &&
+        attempts < maxAttempts
     ){
 
         await new Promise(
@@ -1737,13 +1744,16 @@ async function showRewardedAd(){
     }
 
 
+    /*
+     * SDK not available.
+     */
+
     if(
-        typeof window.show_11926774 !==
-            "function"
+        typeof window.show_11926774 !== "function"
     ){
 
         console.error(
-            "Monetag SDK/function not available."
+            "Monetag Rewarded Interstitial function is not available."
         );
 
         return false;
@@ -1753,53 +1763,73 @@ async function showRewardedAd(){
     try{
 
         console.log(
-            "Opening Monetag Rewarded Interstitial..."
+            "KOKO: Opening Monetag Rewarded Interstitial..."
         );
 
+
+        /*
+         * Call Monetag.
+         */
 
         const result =
             window.show_11926774();
 
 
         /*
-         * IMPORTANT:
+         * Monetag Rewarded Interstitial should
+         * provide an async completion result.
          *
-         * No fake 15-second timer.
-         *
-         * The app will only treat the ad
-         * as completed when the Monetag
-         * function returns a Promise and
-         * that Promise resolves.
+         * We NEVER use a fake delay here.
          */
 
         if(
-            !result ||
-            typeof result.then !==
-                "function"
+            result &&
+            typeof result.then === "function"
         ){
 
-            console.error(
-                "Monetag did not return a Promise. Ad completion cannot be verified."
+            await result;
+
+            console.log(
+                "KOKO: Monetag Rewarded Interstitial completed."
             );
 
-            return false;
+            return true;
         }
 
 
-        await result;
+        /*
+         * Some SDK versions may return a direct
+         * boolean result.
+         */
+
+        if(result === true){
+
+            console.log(
+                "KOKO: Monetag returned TRUE."
+            );
+
+            return true;
+        }
 
 
-        console.log(
-            "Monetag ad finished."
+        /*
+         * Unknown result.
+         *
+         * Do NOT reward.
+         */
+
+        console.error(
+            "KOKO: Monetag returned an unsupported completion result.",
+            result
         );
 
-        return true;
+        return false;
 
 
     }catch(error){
 
         console.error(
-            "Monetag Rewarded Ad Error:",
+            "KOKO: Monetag Rewarded Interstitial error:",
             error
         );
 
@@ -1965,8 +1995,11 @@ async function startDailyCheckin(){
             btn.textContent =
                 "Task";
 
+            dailyCheckinAdCompleted =
+                false;
+
             alert(
-                "Ad is not available right now. Please try again."
+                "The rewarded ad was not completed. Please try again."
             );
 
             return;
@@ -2089,8 +2122,7 @@ async function claimDailyCheckin(){
 
 
         if(
-            typeof data.score ===
-                "number"
+            typeof data.score === "number"
         ){
 
             score =
@@ -2142,12 +2174,6 @@ async function claimDailyCheckin(){
    JOIN TELEGRAM CHANNEL
 ====================================================== */
 
-
-/*
- * Load whether this user already claimed
- * the Join Channel reward.
- */
-
 async function loadJoinChannelStatus(){
 
     try{
@@ -2172,11 +2198,6 @@ async function loadJoinChannelStatus(){
             joinChannelClaimed =
                 !!data.claimed;
 
-
-            /*
-             * If already claimed on server,
-             * no local pending state should remain.
-             */
 
             if(joinChannelClaimed){
 
@@ -2211,8 +2232,7 @@ function openJoinChannel(){
 
         if(
             tg &&
-            typeof tg.openTelegramLink ===
-                "function"
+            typeof tg.openTelegramLink === "function"
         ){
 
             tg.openTelegramLink(
@@ -2240,23 +2260,23 @@ function openJoinChannel(){
 /*
  * JOIN CHANNEL FLOW
  *
- * First click:
- *      Task -> open channel
- *
- * Second click:
- *      Verify membership
- *
- * If joined:
- *      show Monetag ad
- *
- * After ad:
- *      Claim
- *
- * Claim:
- *      +100 coins
- *
- * Done:
- *      permanently finished
+ * Task
+ *   ↓
+ * Open Telegram Channel
+ *   ↓
+ * Verify
+ *   ↓
+ * Telegram membership check
+ *   ↓
+ * Monetag Rewarded Interstitial
+ *   ↓
+ * Ad completion
+ *   ↓
+ * Claim
+ *   ↓
+ * +100 Coins
+ *   ↓
+ * Done
  */
 
 async function startJoinChannelTask(){
@@ -2271,7 +2291,8 @@ async function startJoinChannelTask(){
 
 
     /*
-     * STEP 1
+     * FIRST CLICK
+     *
      * Open channel.
      */
 
@@ -2289,8 +2310,9 @@ async function startJoinChannelTask(){
 
 
     /*
-     * STEP 2
-     * Verify channel membership.
+     * SECOND CLICK
+     *
+     * Verify membership.
      */
 
     const btn =
@@ -2333,7 +2355,7 @@ async function startJoinChannelTask(){
 
 
         /*
-         * User has NOT joined.
+         * NOT JOINED
          */
 
         if(
@@ -2346,14 +2368,8 @@ async function startJoinChannelTask(){
 
             btn.disabled = false;
 
-            /*
-             * IMPORTANT:
-             * Remains Verify.
-             */
-
             btn.textContent =
                 "Verify";
-
 
             alert(
                 verifyData.error ||
@@ -2365,9 +2381,9 @@ async function startJoinChannelTask(){
 
 
         /*
-         * STEP 3
-         * Membership verified.
-         * Now show Monetag ad.
+         * JOINED
+         *
+         * Now show real Monetag ad.
          */
 
         btn.textContent =
@@ -2379,7 +2395,7 @@ async function startJoinChannelTask(){
 
 
         /*
-         * Ad failed/not completed.
+         * AD NOT COMPLETED
          */
 
         if(!adFinished){
@@ -2388,20 +2404,19 @@ async function startJoinChannelTask(){
 
             btn.disabled = false;
 
-            /*
-             * User must verify again before
-             * getting another chance to watch.
-             */
-
             joinChannelAdCompleted =
                 false;
+
+            /*
+             * Keep Verify.
+             * User can try again.
+             */
 
             btn.textContent =
                 "Verify";
 
-
             alert(
-                "Ad could not be completed. Please tap Verify and try again."
+                "The rewarded ad was not completed. Please watch the ad fully and try again."
             );
 
             return;
@@ -2409,9 +2424,9 @@ async function startJoinChannelTask(){
 
 
         /*
-         * STEP 4
-         * Ad completed successfully.
-         * Only NOW Claim becomes available.
+         * AD COMPLETED
+         *
+         * Only now Claim becomes available.
          */
 
         joinChannelAdCompleted =
@@ -2444,8 +2459,7 @@ async function startJoinChannelTask(){
 
 
 /*
- * STEP 5
- * Claim the +100 reward.
+ * CLAIM JOIN CHANNEL REWARD
  */
 
 async function claimJoinChannel(){
@@ -2509,10 +2523,6 @@ async function claimJoinChannel(){
 
             btn.disabled = false;
 
-            /*
-             * If server says already claimed,
-             * permanently mark it Done.
-             */
 
             if(data.claimed){
 
@@ -2543,13 +2553,11 @@ async function claimJoinChannel(){
 
 
         /*
-         * IMPORTANT:
-         * Use the score returned by server.
+         * Server score is the source of truth.
          */
 
         if(
-            typeof data.score ===
-                "number"
+            typeof data.score === "number"
         ){
 
             score =
@@ -2972,7 +2980,7 @@ async function runUsernameAd(){
             "Watch Ad";
 
         showUsernameError(
-            "Ad is not available right now. Please try again."
+            "The rewarded ad was not completed. Please try again."
         );
 
         return;
@@ -3098,8 +3106,7 @@ async function claimUsername(){
 
 
         if(
-            typeof claimData.score ===
-                "number"
+            typeof claimData.score === "number"
         ){
 
             score =
@@ -3169,6 +3176,17 @@ let matchedPairs = 0;
 
 
 function startMatching(){
+
+    if(
+        currentTask >= TOTAL_TASKS
+    ){
+
+        alert(
+            "🏆 All 10 tasks are already completed."
+        );
+
+        return;
+    }
 
     showPage(
         "game"
@@ -3422,6 +3440,13 @@ function resetBoard(){
 }
 
 
+/*
+ * Finish Memory Match task.
+ *
+ * IMPORTANT:
+ * No reward is added before the ad finishes.
+ */
+
 async function finishTask(){
 
     if(taskBusy) return;
@@ -3456,15 +3481,16 @@ async function finishTask(){
             "message error";
 
         message.textContent =
-            "Ad is not available right now. Please try again.";
+            "The rewarded ad was not completed. Please try again.";
 
         return;
     }
 
 
     /*
-     * Only after ad completion:
-     * reward the game task.
+     * AD COMPLETED
+     *
+     * Only now give +100.
      */
 
     score +=
@@ -3472,6 +3498,10 @@ async function finishTask(){
 
     currentTask++;
 
+
+    /*
+     * Save immediately to MongoDB.
+     */
 
     await saveData();
 
@@ -3791,7 +3821,7 @@ function updateUI(){
 
 
         /*
-         * Already claimed
+         * ALREADY CLAIMED
          */
 
         if(joinChannelClaimed){
@@ -3808,13 +3838,11 @@ function updateUI(){
 
             channelBtn.onclick =
                 null;
-
         }
 
 
         /*
-         * Ad finished
-         * Claim is now available.
+         * AD FINISHED
          */
 
         else if(
@@ -3833,16 +3861,11 @@ function updateUI(){
 
             channelBtn.onclick =
                 claimJoinChannel;
-
         }
 
 
         /*
-         * Channel opened but not yet
-         * verified.
-         *
-         * IMPORTANT:
-         * Button says VERIFY, not CLAIM.
+         * CHANNEL OPENED
          */
 
         else if(
@@ -3857,12 +3880,11 @@ function updateUI(){
 
             channelBtn.onclick =
                 startJoinChannelTask;
-
         }
 
 
         /*
-         * First state.
+         * FIRST STATE
          */
 
         else{
@@ -4035,7 +4057,10 @@ async function initializeKoko(){
 
 
     /*
-     * Load MongoDB user data
+     * Load MongoDB user data.
+     *
+     * Existing score/currentTask are loaded.
+     * They are NOT reset.
      */
 
     try{
@@ -4058,22 +4083,10 @@ async function initializeKoko(){
             data.user
         ){
 
-            /*
-             * IMPORTANT:
-             * Existing coins are loaded.
-             * Nothing is reset.
-             */
-
             score =
                 data.user.score ||
                 0;
 
-
-            /*
-             * IMPORTANT:
-             * Existing completed game tasks
-             * are loaded.
-             */
 
             currentTask =
                 data.user.currentTask ||
