@@ -20,21 +20,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 // ===============================
-// MongoDB Atlas Connection
-// ===============================
-if (!MONGO_URI) {
-    console.error("❌ MONGO_URI is not set in environment variables.");
-} else {
-    mongoose.connect(MONGO_URI)
-        .then(() => {
-            console.log("✅ Connected to MongoDB Atlas successfully!");
-        })
-        .catch((err) => {
-            console.error("❌ MongoDB connection error:", err.message);
-        });
-}
-
-// ===============================
 // User Schema
 // ===============================
 const UserSchema = new mongoose.Schema({
@@ -44,9 +29,21 @@ const UserSchema = new mongoose.Schema({
         unique: true
     },
 
+    // Telegram username
     username: {
         type: String,
         default: ""
+    },
+
+    // KOKO custom username
+    // IMPORTANT:
+    // sparse + unique means:
+    // - empty/unset users can exist
+    // - one username can only belong to one user
+    appUsername: {
+        type: String,
+        unique: true,
+        sparse: true
     },
 
     score: {
@@ -76,7 +73,98 @@ const UserSchema = new mongoose.Schema({
     }
 });
 
+// ===============================
+// MongoDB Unique Username Index
+// ===============================
+UserSchema.index(
+    { appUsername: 1 },
+    {
+        unique: true,
+        sparse: true
+    }
+);
+
 const User = mongoose.model('User', UserSchema);
+
+// ===============================
+// MongoDB Atlas Connection
+// ===============================
+if (!MONGO_URI) {
+
+    console.error(
+        "❌ MONGO_URI is not set in environment variables."
+    );
+
+} else {
+
+    mongoose.connect(MONGO_URI)
+        .then(async () => {
+
+            console.log(
+                "✅ Connected to MongoDB Atlas successfully!"
+            );
+
+            try {
+
+                // Make sure indexes are created
+                await User.init();
+
+                console.log(
+                    "✅ MongoDB username unique index is ready!"
+                );
+
+            } catch (indexErr) {
+
+                console.error(
+                    "❌ MongoDB index error:",
+                    indexErr.message
+                );
+            }
+
+        })
+        .catch((err) => {
+
+            console.error(
+                "❌ MongoDB connection error:",
+                err.message
+            );
+
+        });
+}
+
+// ===============================
+// Username Normalizer
+// ===============================
+function normalizeAppUsername(username) {
+
+    if (typeof username !== 'string') {
+        return '';
+    }
+
+    let value = username.trim();
+
+    // Remove @ if user enters @tanim
+    if (value.startsWith('@')) {
+        value = value.substring(1);
+    }
+
+    // Username will be case-insensitive
+    value = value.toLowerCase();
+
+    return value;
+}
+
+// ===============================
+// Username Validator
+// ===============================
+function isValidAppUsername(username) {
+
+    // 3-20 characters
+    // letters, numbers and underscore only
+    const usernameRegex = /^[a-z0-9_]{3,20}$/;
+
+    return usernameRegex.test(username);
+}
 
 // ===============================
 // Telegram Message Helper
@@ -86,19 +174,27 @@ async function sendTelegramMessage(
     text,
     replyMarkup = null
 ) {
+
     if (!BOT_TOKEN) {
-        console.error("❌ BOT_TOKEN is not set.");
+
+        console.error(
+            "❌ BOT_TOKEN is not set."
+        );
+
         return;
     }
 
     try {
+
         const response = await fetch(
             `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
             {
                 method: 'POST',
+
                 headers: {
                     'Content-Type': 'application/json'
                 },
+
                 body: JSON.stringify({
                     chat_id: chatId,
                     text: text,
@@ -111,12 +207,15 @@ async function sendTelegramMessage(
         const data = await response.json();
 
         if (!data.ok) {
+
             console.error(
                 "❌ Telegram API error:",
                 data.description
             );
         }
+
     } catch (err) {
+
         console.error(
             "❌ Telegram request error:",
             err.message
@@ -128,13 +227,21 @@ async function sendTelegramMessage(
 // Telegram Webhook
 // ===============================
 app.post('/telegram/webhook', async (req, res) => {
+
     try {
+
         const update = req.body;
 
-        console.log("📩 Telegram update received");
+        console.log(
+            "📩 Telegram update received"
+        );
 
         if (!update || !update.message) {
-            console.log("⚠️ Update has no message");
+
+            console.log(
+                "⚠️ Update has no message"
+            );
+
             return res.sendStatus(200);
         }
 
@@ -142,13 +249,16 @@ app.post('/telegram/webhook', async (req, res) => {
         const chatId = message.chat.id;
         const telegramUser = message.from;
 
-        const telegramId = String(telegramUser.id);
+        const telegramId =
+            String(telegramUser.id);
 
-        const username = telegramUser.username
-            ? `@${telegramUser.username}`
-            : "";
+        const username =
+            telegramUser.username
+                ? `@${telegramUser.username}`
+                : "";
 
-        const text = message.text || "";
+        const text =
+            message.text || "";
 
         console.log(
             `👤 Telegram User: ${telegramId}`
@@ -163,9 +273,12 @@ app.post('/telegram/webhook', async (req, res) => {
         // ===============================
         if (text.startsWith('/start')) {
 
-            console.log("🚀 /start command detected");
+            console.log(
+                "🚀 /start command detected"
+            );
 
-            const parts = text.trim().split(/\s+/);
+            const parts =
+                text.trim().split(/\s+/);
 
             const startParameter =
                 parts.length > 1
@@ -177,9 +290,10 @@ app.post('/telegram/webhook', async (req, res) => {
             );
 
             // Find current user
-            let user = await User.findOne({
-                telegramId
-            });
+            let user =
+                await User.findOne({
+                    telegramId
+                });
 
             // ===============================
             // NEW USER
@@ -266,12 +380,14 @@ app.post('/telegram/webhook', async (req, res) => {
                     `👤 Existing user: ${telegramId}`
                 );
 
-                // Update username if changed
+                // Update Telegram username if changed
                 if (
                     username &&
                     user.username !== username
                 ) {
+
                     user.username = username;
+
                     await user.save();
                 }
 
@@ -284,21 +400,27 @@ app.post('/telegram/webhook', async (req, res) => {
             // OPEN KOKO BUTTON
             // ===============================
             const replyMarkup = {
+
                 inline_keyboard: [
+
                     [
                         {
                             text: "🎮 Open KOKO",
+
                             web_app: {
                                 url: WEB_APP_URL
                             }
                         }
                     ]
+
                 ]
             };
 
             await sendTelegramMessage(
                 chatId,
+
                 `👋 <b>Welcome to KOKO!</b>\n\n🎮 Play Memory Match\n🪙 Complete tasks and earn coins\n👥 Invite friends and grow your referrals!`,
+
                 replyMarkup
             );
 
@@ -320,10 +442,11 @@ app.post('/telegram/webhook', async (req, res) => {
     }
 });
 
-// ===============================
+// ======================================================
 // API: Get or Create User
-// ===============================
+// ======================================================
 app.get('/api/user/:telegramId', async (req, res) => {
+
     try {
 
         const telegramId =
@@ -362,10 +485,11 @@ app.get('/api/user/:telegramId', async (req, res) => {
     }
 });
 
-// ===============================
+// ======================================================
 // API: Update User Data
-// ===============================
+// ======================================================
 app.post('/api/user/update', async (req, res) => {
+
     try {
 
         const {
@@ -377,6 +501,7 @@ app.post('/api/user/update', async (req, res) => {
         } = req.body;
 
         if (!telegramId) {
+
             return res.status(400).json({
                 success: false,
                 error: "Telegram ID is required"
@@ -386,26 +511,36 @@ app.post('/api/user/update', async (req, res) => {
         const updateData = {};
 
         if (score !== undefined) {
+
             updateData.score = score;
         }
 
         if (currentTask !== undefined) {
-            updateData.currentTask = currentTask;
+
+            updateData.currentTask =
+                currentTask;
         }
 
         if (usernameClaimed !== undefined) {
+
             updateData.usernameClaimed =
                 usernameClaimed;
         }
 
         if (username !== undefined) {
-            updateData.username = username;
+
+            updateData.username =
+                username;
         }
 
         const user =
             await User.findOneAndUpdate(
                 { telegramId },
-                { $set: updateData },
+
+                {
+                    $set: updateData
+                },
+
                 {
                     new: true,
                     upsert: true
@@ -431,9 +566,337 @@ app.post('/api/user/update', async (req, res) => {
     }
 });
 
-// ===============================
+// ======================================================
+// USERNAME SYSTEM
+// ======================================================
+
+// ======================================================
+// API: Check Username Availability
+// ======================================================
+app.post(
+    '/api/username/check',
+    async (req, res) => {
+
+        try {
+
+            const {
+                telegramId,
+                username
+            } = req.body;
+
+            if (!telegramId) {
+
+                return res.status(400).json({
+                    success: false,
+                    error: "Telegram ID is required"
+                });
+            }
+
+            const normalizedUsername =
+                normalizeAppUsername(username);
+
+            // Empty username
+            if (!normalizedUsername) {
+
+                return res.status(400).json({
+                    success: false,
+                    available: false,
+                    error: "Username is required"
+                });
+            }
+
+            // Validate username
+            if (
+                !isValidAppUsername(
+                    normalizedUsername
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    available: false,
+                    error:
+                        "Username must be 3-20 characters and use only letters, numbers and underscore."
+                });
+            }
+
+            // Check current user
+            const currentUser =
+                await User.findOne({
+                    telegramId
+                });
+
+            if (!currentUser) {
+
+                return res.status(404).json({
+                    success: false,
+                    available: false,
+                    error: "User not found"
+                });
+            }
+
+            // If user already claimed a username
+            if (
+                currentUser.usernameClaimed &&
+                currentUser.appUsername
+            ) {
+
+                if (
+                    currentUser.appUsername ===
+                    normalizedUsername
+                ) {
+
+                    return res.json({
+                        success: true,
+                        available: true,
+                        alreadyOwned: true,
+                        username:
+                            currentUser.appUsername
+                    });
+                }
+            }
+
+            // Check MongoDB
+            const existingUser =
+                await User.findOne({
+                    appUsername:
+                        normalizedUsername
+                });
+
+            if (existingUser) {
+
+                console.log(
+                    `❌ Username already taken: ${normalizedUsername}`
+                );
+
+                return res.status(409).json({
+                    success: false,
+                    available: false,
+                    error:
+                        "Please choose another username"
+                });
+            }
+
+            console.log(
+                `✅ Username available: ${normalizedUsername}`
+            );
+
+            res.json({
+                success: true,
+                available: true,
+                username:
+                    normalizedUsername
+            });
+
+        } catch (err) {
+
+            console.error(
+                "Username check error:",
+                err
+            );
+
+            res.status(500).json({
+                success: false,
+                available: false,
+                error:
+                    "Server error while checking username"
+            });
+        }
+    }
+);
+
+// ======================================================
+// API: Claim Username AFTER AD
+// ======================================================
+app.post(
+    '/api/username/claim',
+    async (req, res) => {
+
+        try {
+
+            const {
+                telegramId,
+                username
+            } = req.body;
+
+            if (!telegramId) {
+
+                return res.status(400).json({
+                    success: false,
+                    error: "Telegram ID is required"
+                });
+            }
+
+            const normalizedUsername =
+                normalizeAppUsername(username);
+
+            if (!normalizedUsername) {
+
+                return res.status(400).json({
+                    success: false,
+                    error: "Username is required"
+                });
+            }
+
+            if (
+                !isValidAppUsername(
+                    normalizedUsername
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        "Username must be 3-20 characters and use only letters, numbers and underscore."
+                });
+            }
+
+            // Find current user
+            const currentUser =
+                await User.findOne({
+                    telegramId
+                });
+
+            if (!currentUser) {
+
+                return res.status(404).json({
+                    success: false,
+                    error: "User not found"
+                });
+            }
+
+            // Already claimed
+            if (
+                currentUser.usernameClaimed &&
+                currentUser.appUsername
+            ) {
+
+                if (
+                    currentUser.appUsername ===
+                    normalizedUsername
+                ) {
+
+                    return res.json({
+                        success: true,
+                        alreadyClaimed: true,
+                        username:
+                            currentUser.appUsername,
+                        score:
+                            currentUser.score
+                    });
+                }
+
+                return res.status(409).json({
+                    success: false,
+                    error:
+                        "Username has already been claimed"
+                });
+            }
+
+            // ==================================================
+            // ATOMIC CLAIM
+            // ==================================================
+            // Only claim if nobody owns this username.
+            // MongoDB unique index provides final protection.
+            const updatedUser =
+                await User.findOneAndUpdate(
+
+                    {
+                        telegramId,
+
+                        $or: [
+                            {
+                                appUsername: {
+                                    $exists: false
+                                }
+                            },
+                            {
+                                appUsername: null
+                            }
+                        ],
+
+                        usernameClaimed: false
+                    },
+
+                    {
+                        $set: {
+                            appUsername:
+                                normalizedUsername,
+
+                            usernameClaimed:
+                                true
+                        },
+
+                        $inc: {
+                            score: 100
+                        }
+                    },
+
+                    {
+                        new: true
+                    }
+                );
+
+            if (!updatedUser) {
+
+                return res.status(409).json({
+                    success: false,
+                    error:
+                        "Username has already been claimed"
+                });
+            }
+
+            console.log(
+                `✅ Username claimed: ${normalizedUsername} by ${telegramId}`
+            );
+
+            console.log(
+                `🪙 +100 coins awarded to ${telegramId}`
+            );
+
+            res.json({
+                success: true,
+                username:
+                    updatedUser.appUsername,
+                usernameClaimed:
+                    updatedUser.usernameClaimed,
+                score:
+                    updatedUser.score
+            });
+
+        } catch (err) {
+
+            // MongoDB duplicate key error
+            if (err.code === 11000) {
+
+                console.log(
+                    `❌ Duplicate username blocked by MongoDB: ${req.body.username}`
+                );
+
+                return res.status(409).json({
+                    success: false,
+                    error:
+                        "Please choose another username"
+                });
+            }
+
+            console.error(
+                "Username claim error:",
+                err
+            );
+
+            res.status(500).json({
+                success: false,
+                error:
+                    "Server error while claiming username"
+            });
+        }
+    }
+);
+
+// ======================================================
 // API: Get Referral Data
-// ===============================
+// ======================================================
 app.get(
     '/api/referral/:telegramId',
     async (req, res) => {
@@ -460,10 +923,14 @@ app.get(
                 `https://t.me/koko_mini_bot?start=${telegramId}`;
 
             res.json({
+
                 success: true,
+
                 referralLink,
+
                 referralCount:
                     user.referralCount || 0,
+
                 referredBy:
                     user.referredBy || null
             });
@@ -483,9 +950,9 @@ app.get(
     }
 );
 
-// ===============================
+// ======================================================
 // Telegram Webhook Setup
-// ===============================
+// ======================================================
 async function setupTelegramWebhook() {
 
     if (!BOT_TOKEN) {
@@ -507,10 +974,12 @@ async function setupTelegramWebhook() {
                 `https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`,
                 {
                     method: 'POST',
+
                     headers: {
                         'Content-Type':
                             'application/json'
                     },
+
                     body: JSON.stringify({
                         url: webhookUrl
                     })
@@ -547,9 +1016,9 @@ async function setupTelegramWebhook() {
     }
 }
 
-// ===============================
+// ======================================================
 // Fallback to index.html
-// ===============================
+// ======================================================
 app.get('*', (req, res) => {
 
     res.sendFile(
@@ -560,9 +1029,9 @@ app.get('*', (req, res) => {
     );
 });
 
-// ===============================
+// ======================================================
 // Start Server
-// ===============================
+// ======================================================
 app.listen(PORT, async () => {
 
     console.log(
