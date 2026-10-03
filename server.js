@@ -10,8 +10,10 @@ const PORT = process.env.PORT || 3000;
 // ===============================
 const MONGO_URI = process.env.MONGO_URI;
 const BOT_TOKEN = process.env.BOT_TOKEN;
+
 const WEB_APP_URL =
-    process.env.WEB_APP_URL || 'https://kokobot-9v3t.onrender.com';
+    process.env.WEB_APP_URL ||
+    'https://kokobot-9v3t.onrender.com';
 
 // ===============================
 // Middleware
@@ -23,6 +25,7 @@ app.use(express.static(path.join(__dirname)));
 // User Schema
 // ===============================
 const UserSchema = new mongoose.Schema({
+
     telegramId: {
         type: String,
         required: true,
@@ -36,14 +39,9 @@ const UserSchema = new mongoose.Schema({
     },
 
     // KOKO custom username
-    // IMPORTANT:
-    // sparse + unique means:
-    // - empty/unset users can exist
-    // - one username can only belong to one user
+    // Unique index is created below.
     appUsername: {
-        type: String,
-        unique: true,
-        sparse: true
+        type: String
     },
 
     score: {
@@ -71,11 +69,15 @@ const UserSchema = new mongoose.Schema({
         type: Number,
         default: 0
     }
+
 });
 
 // ===============================
 // MongoDB Unique Username Index
 // ===============================
+// IMPORTANT:
+// appUsername index is declared ONLY here.
+// This prevents duplicate schema index warning.
 UserSchema.index(
     { appUsername: 1 },
     {
@@ -148,7 +150,7 @@ function normalizeAppUsername(username) {
         value = value.substring(1);
     }
 
-    // Username will be case-insensitive
+    // Username is case-insensitive
     value = value.toLowerCase();
 
     return value;
@@ -588,6 +590,7 @@ app.post(
 
                 return res.status(400).json({
                     success: false,
+                    available: false,
                     error: "Telegram ID is required"
                 });
             }
@@ -635,7 +638,7 @@ app.post(
                 });
             }
 
-            // If user already claimed a username
+            // If user already owns this username
             if (
                 currentUser.usernameClaimed &&
                 currentUser.appUsername
@@ -796,8 +799,6 @@ app.post(
             // ==================================================
             // ATOMIC CLAIM
             // ==================================================
-            // Only claim if nobody owns this username.
-            // MongoDB unique index provides final protection.
             const updatedUser =
                 await User.findOneAndUpdate(
 
@@ -856,10 +857,13 @@ app.post(
 
             res.json({
                 success: true,
+
                 username:
                     updatedUser.appUsername,
+
                 usernameClaimed:
                     updatedUser.usernameClaimed,
+
                 score:
                     updatedUser.score
             });
