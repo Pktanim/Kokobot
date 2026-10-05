@@ -313,7 +313,7 @@ async function isChannelMember(
                 "getChatMember",
                 {
 
-                    chat_id:
+                    chat_id:"@tripsgame",
                         CHANNEL_USERNAME,
 
                     user_id:
