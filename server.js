@@ -5,1399 +5,1833 @@ const path = require("path");
 const app = express();
 
 const PORT = process.env.PORT || 10000;
+
 const BOT_TOKEN = process.env.BOT_TOKEN;
+
 const MONGO_URI = process.env.MONGO_URI;
+
 const WEB_APP_URL =
-    process.env.WEB_APP_URL || "https://kokobot-9v3t.onrender.com";
+    process.env.WEB_APP_URL ||
+    "https://kokobot-9v3t.onrender.com";
 
 
-// =====================================================
-// BASIC MIDDLEWARE
-// =====================================================
+/* =====================================================
+   KOKO SETTINGS
+===================================================== */
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const BOT_USERNAME = "koko_mini_bot";
 
-app.use(express.static(path.join(__dirname)));
+/*
+ * Telegram channel
+ *
+ * KOKO Bot must be ADMIN of this channel
+ * so Telegram Bot API can check membership.
+ */
+const CHANNEL_USERNAME = "@tripsgame";
+
+const CHANNEL_REWARD = 100;
+
+const DAILY_REWARD = 100;
+
+const USERNAME_REWARD = 100;
 
 
-// =====================================================
-// MONGODB USER SCHEMA
-// =====================================================
+/* =====================================================
+   MIDDLEWARE
+===================================================== */
 
-const UserSchema = new mongoose.Schema(
-    {
-        telegramId: {
-            type: String,
-            required: true,
-            unique: true,
-            index: true
-        },
+app.use(
+    express.json()
+);
 
-        username: {
-            type: String,
-            default: ""
-        },
+app.use(
+    express.urlencoded({
+        extended:true
+    })
+);
 
-        appUsername: {
-            type: String,
-            default: undefined
-        },
+app.use(
+    express.static(
+        path.join(
+            __dirname
+        )
+    )
+);
 
-        score: {
-            type: Number,
-            default: 0
-        },
 
-        currentTask: {
-            type: Number,
-            default: 0
-        },
+/* =====================================================
+   MONGODB
+===================================================== */
 
-        usernameClaimed: {
-            type: Boolean,
-            default: false
-        },
-
-        referredBy: {
-            type: String,
-            default: ""
-        },
-
-        referralCount: {
-            type: Number,
-            default: 0
-        },
-
-        // =============================================
-        // DAILY CHECK-IN
-        // =============================================
-
-        dailyCheckInDate: {
-            type: String,
-            default: ""
-        },
-
-        dailyCheckInPending: {
-            type: Boolean,
-            default: false
-        },
-
-        dailyCheckInPendingDate: {
-            type: String,
-            default: ""
-        },
-
-        // Old field kept so existing database data is not broken
-        dailyCheckinClaimedAt: {
-            type: Date,
-            default: null
+mongoose
+    .connect(
+        MONGO_URI
+    )
+    .then(
+        () => {
+            console.log(
+                "MongoDB connected successfully."
+            );
         }
-    },
-    {
-        timestamps: true
-    }
-);
-
-
-// =====================================================
-// UNIQUE APP USERNAME
-// =====================================================
-
-UserSchema.index(
-    { appUsername: 1 },
-    {
-        unique: true,
-        sparse: true
-    }
-);
-
-
-const User = mongoose.model("User", UserSchema);
-
-
-// =====================================================
-// HELPER FUNCTIONS
-// =====================================================
-
-function normalizeTelegramId(value) {
-    return String(value || "").trim();
-}
-
-
-function normalizeAppUsername(username) {
-    return String(username || "")
-        .trim()
-        .replace(/^@/, "")
-        .toLowerCase();
-}
-
-
-function isValidAppUsername(username) {
-    return /^[a-z0-9_]{3,20}$/.test(username);
-}
-
-
-// =====================================================
-// BANGLADESH DATE
-// =====================================================
-
-function getBangladeshDate() {
-    return new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Dhaka",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-    }).format(new Date());
-}
-
-
-// =====================================================
-// TELEGRAM API HELPER
-// =====================================================
-
-async function telegramRequest(method, body = {}) {
-    if (!BOT_TOKEN) {
-        throw new Error("BOT_TOKEN is missing");
-    }
-
-    const response = await fetch(
-        `https://api.telegram.org/bot${BOT_TOKEN}/${method}`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(body)
+    )
+    .catch(
+        error => {
+            console.error(
+                "MongoDB connection error:",
+                error
+            );
         }
     );
 
-    return response.json();
+
+/* =====================================================
+   USER SCHEMA
+===================================================== */
+
+const UserSchema =
+    new mongoose.Schema(
+
+        {
+
+            telegramId:{
+                type:String,
+                required:true,
+                unique:true,
+                index:true
+            },
+
+            username:{
+                type:String,
+                default:""
+            },
+
+            appUsername:{
+                type:String,
+                default:"",
+                unique:true,
+                sparse:true,
+                index:true
+            },
+
+            score:{
+                type:Number,
+                default:0
+            },
+
+            currentTask:{
+                type:Number,
+                default:0
+            },
+
+            usernameClaimed:{
+                type:Boolean,
+                default:false
+            },
+
+            referredBy:{
+                type:String,
+                default:""
+            },
+
+            referralCount:{
+                type:Number,
+                default:0
+            },
+
+
+            /* DAILY CHECK-IN */
+
+            dailyCheckinDate:{
+                type:String,
+                default:""
+            },
+
+            dailyCheckinPending:{
+                type:Boolean,
+                default:false
+            },
+
+
+            /* CHANNEL TASK */
+
+            channelTaskClaimed:{
+                type:Boolean,
+                default:false
+            },
+
+            channelTaskPending:{
+                type:Boolean,
+                default:false
+            },
+
+            channelTaskVerified:{
+                type:Boolean,
+                default:false
+            },
+
+            channelTaskAdCompleted:{
+                type:Boolean,
+                default:false
+            }
+
+        },
+
+        {
+            timestamps:true
+        }
+
+    );
+
+
+const User =
+    mongoose.model(
+        "User",
+        UserSchema
+    );
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function getToday(){
+
+    const now =
+        new Date();
+
+    const year =
+        now.getUTCFullYear();
+
+    const month =
+        String(
+            now.getUTCMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+    const day =
+        String(
+            now.getUTCDate()
+        ).padStart(
+            2,
+            "0"
+        );
+
+    return (
+        year +
+        "-" +
+        month +
+        "-" +
+        day
+    );
 }
 
 
-async function sendTelegramMessage(chatId, text, extra = {}) {
-    return telegramRequest("sendMessage", {
-        chat_id: chatId,
-        text,
-        ...extra
-    });
-}
+async function getOrCreateUser(
+    telegramId
+){
 
+    if(!telegramId){
 
-// =====================================================
-// CREATE / GET USER
-// =====================================================
+        return null;
 
-async function getOrCreateUser(telegramId, username = "") {
-    let user = await User.findOne({ telegramId });
+    }
 
-    if (!user) {
-        user = await User.create({
-            telegramId,
-            username: username || ""
+    let user =
+        await User.findOne({
+            telegramId
         });
-    } else if (username && user.username !== username) {
-        user.username = username;
-        await user.save();
+
+    if(!user){
+
+        user =
+            await User.create({
+
+                telegramId,
+
+                score:0,
+
+                currentTask:0
+
+            });
+
     }
 
     return user;
+
 }
 
 
-// =====================================================
-// HOME / FRONTEND
-// =====================================================
+/* =====================================================
+   TELEGRAM BOT API
+===================================================== */
 
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
-});
+async function telegramApi(
+    method,
+    body
+){
 
+    if(!BOT_TOKEN){
 
-// =====================================================
-// USER API
-// =====================================================
+        throw new Error(
+            "BOT_TOKEN is missing."
+        );
 
-app.get("/api/user/:telegramId", async (req, res) => {
-    try {
-        const telegramId = normalizeTelegramId(req.params.telegramId);
-
-        if (!telegramId) {
-            return res.status(400).json({
-                success: false,
-                error: "Telegram ID is required."
-            });
-        }
-
-        const user = await User.findOne({ telegramId });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: "User not found."
-            });
-        }
-
-        const today = getBangladeshDate();
-
-        const claimedToday =
-            user.dailyCheckInDate === today;
-
-        const pendingToday =
-            user.dailyCheckInPending === true &&
-            user.dailyCheckInPendingDate === today;
-
-        res.json({
-            success: true,
-
-            user: {
-                telegramId: user.telegramId,
-                username: user.username,
-                appUsername: user.appUsername || "",
-                score: user.score,
-                currentTask: user.currentTask,
-                usernameClaimed: !!user.usernameClaimed,
-                referredBy: user.referredBy || "",
-                referralCount: user.referralCount || 0
-            },
-
-            dailyCheckin: {
-                claimedToday,
-                pending: pendingToday,
-                claimedAt: user.dailyCheckinClaimedAt || null
-            }
-        });
-
-    } catch (error) {
-        console.error("GET USER ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            error: "Server error."
-        });
     }
-});
 
-
-// =====================================================
-// UPDATE USER
-// =====================================================
-
-app.post("/api/user/update", async (req, res) => {
-    try {
-        const {
-            telegramId,
-            username,
-            score,
-            currentTask
-        } = req.body;
-
-        const id = normalizeTelegramId(telegramId);
-
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                error: "Telegram ID is required."
-            });
-        }
-
-        const update = {};
-
-        if (typeof username === "string") {
-            update.username = username;
-        }
-
-        if (typeof score === "number" && Number.isFinite(score)) {
-            update.score = score;
-        }
-
-        if (
-            typeof currentTask === "number" &&
-            Number.isFinite(currentTask)
-        ) {
-            update.currentTask = currentTask;
-        }
-
-        const user = await User.findOneAndUpdate(
-            { telegramId: id },
-            { $set: update },
+    const response =
+        await fetch(
+            "https://api.telegram.org/bot" +
+            BOT_TOKEN +
+            "/" +
+            method,
             {
-                new: true,
-                upsert: true,
-                setDefaultsOnInsert: true
+
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body:JSON.stringify(
+                    body || {}
+                )
+
             }
         );
 
-        res.json({
-            success: true,
-            score: user.score,
-            currentTask: user.currentTask
-        });
+    const data =
+        await response.json();
 
-    } catch (error) {
-        console.error("UPDATE USER ERROR:", error);
+    return data;
 
-        res.status(500).json({
-            success: false,
-            error: "Unable to update user."
-        });
-    }
-});
+}
 
 
-// =====================================================
-// USERNAME CHECK
-// =====================================================
+/* =====================================================
+   CHECK TELEGRAM CHANNEL MEMBERSHIP
+===================================================== */
 
-app.post("/api/username/check", async (req, res) => {
-    try {
-        const username = normalizeAppUsername(req.body.username);
+async function isChannelMember(
+    telegramId
+){
 
-        if (!isValidAppUsername(username)) {
-            return res.status(400).json({
-                success: false,
-                available: false,
-                error:
-                    "Username must be 3-20 characters and use only letters, numbers, or underscore."
-            });
-        }
+    try{
 
-        const existingUser = await User.findOne({
-            appUsername: username
-        });
-
-        if (existingUser) {
-            return res.json({
-                success: true,
-                available: false,
-                error: "Please choose another username"
-            });
-        }
-
-        return res.json({
-            success: true,
-            available: true,
-            username
-        });
-
-    } catch (error) {
-        console.error("USERNAME CHECK ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            available: false,
-            error: "Unable to check username."
-        });
-    }
-});
-
-
-// =====================================================
-// USERNAME CLAIM / RESERVE
-// =====================================================
-
-app.post("/api/username/claim", async (req, res) => {
-    try {
-        const {
-            telegramId,
-            username,
-            action
-        } = req.body;
-
-        const id = normalizeTelegramId(telegramId);
-        const normalizedUsername = normalizeAppUsername(username);
-
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                error: "Telegram ID is required."
-            });
-        }
-
-        if (!isValidAppUsername(normalizedUsername)) {
-            return res.status(400).json({
-                success: false,
-                error: "Invalid username."
-            });
-        }
-
-
-        // =================================================
-        // RESERVE USERNAME
-        // =================================================
-
-        if (action === "reserve") {
-
-            const user = await User.findOne({
-                telegramId: id
-            });
-
-            if (!user) {
-                return res.status(404).json({
-                    success: false,
-                    error: "User not found."
-                });
-            }
-
-
-            // Already has another username
-            if (
-                user.appUsername &&
-                user.appUsername !== normalizedUsername
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    error: "Username is already reserved."
-                });
-            }
-
-
-            // Already reserved
-            if (
-                user.appUsername === normalizedUsername
-            ) {
-                return res.json({
-                    success: true,
-                    reserved: true,
-                    username: normalizedUsername,
-                    usernameClaimed: !!user.usernameClaimed
-                });
-            }
-
-
-            // Atomic reservation
-            try {
-                const reservedUser =
-                    await User.findOneAndUpdate(
-                        {
-                            telegramId: id,
-                            $or: [
-                                {
-                                    appUsername: {
-                                        $exists: false
-                                    }
-                                },
-                                {
-                                    appUsername: null
-                                },
-                                {
-                                    appUsername: ""
-                                }
-                            ]
-                        },
-                        {
-                            $set: {
-                                appUsername:
-                                    normalizedUsername,
-                                usernameClaimed: false
-                            }
-                        },
-                        {
-                            new: true
-                        }
-                    );
-
-                if (!reservedUser) {
-                    return res.status(409).json({
-                        success: false,
-                        error:
-                            "Please choose another username"
-                    });
-                }
-
-                return res.json({
-                    success: true,
-                    reserved: true,
-                    username:
-                        reservedUser.appUsername,
-                    usernameClaimed:
-                        !!reservedUser.usernameClaimed
-                });
-
-            } catch (error) {
-
-                // Duplicate MongoDB username
-                if (error && error.code === 11000) {
-                    return res.status(409).json({
-                        success: false,
-                        error:
-                            "Please choose another username"
-                    });
-                }
-
-                throw error;
-            }
-        }
-
-
-        // =================================================
-        // CLAIM +100 COINS
-        // =================================================
-
-        if (action === "claim") {
-
-            const user = await User.findOneAndUpdate(
+        const result =
+            await telegramApi(
+                "getChatMember",
                 {
-                    telegramId: id,
-                    appUsername: normalizedUsername,
-                    usernameClaimed: false
-                },
-                {
-                    $set: {
-                        usernameClaimed: true
-                    },
-                    $inc: {
-                        score: 100
-                    }
-                },
-                {
-                    new: true
+
+                    chat_id:
+                        CHANNEL_USERNAME,
+
+                    user_id:
+                        Number(
+                            telegramId
+                        )
+
                 }
             );
 
-            if (!user) {
+        if(
+            !result ||
+            !result.ok
+        ){
+
+            console.error(
+                "Telegram membership check failed:",
+                result
+            );
+
+            return false;
+
+        }
+
+        const status =
+            result.result &&
+            result.result.status;
+
+        /*
+         * Valid channel members:
+         *
+         * creator
+         * administrator
+         * member
+         *
+         * Restricted users can also still
+         * be members when Telegram returns
+         * restricted.
+         */
+
+        if(
+            status === "creator" ||
+            status === "administrator" ||
+            status === "member" ||
+            status === "restricted"
+        ){
+
+            return true;
+
+        }
+
+        return false;
+
+    }catch(error){
+
+        console.error(
+            "Channel membership error:",
+            error
+        );
+
+        return false;
+
+    }
+
+}
+
+
+/* =====================================================
+   HOME
+===================================================== */
+
+app.get(
+    "/",
+    (req,res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "index.html"
+            )
+        );
+
+    }
+);
+
+
+/* =====================================================
+   GET USER
+===================================================== */
+
+app.get(
+    "/api/user/:telegramId",
+    async (req,res) => {
+
+        try{
+
+            const telegramId =
+                String(
+                    req.params.telegramId
+                );
+
+            const user =
+                await getOrCreateUser(
+                    telegramId
+                );
+
+            if(!user){
+
                 return res.status(400).json({
-                    success: false,
-                    error:
-                        "Username task is not ready to claim."
+                    success:false,
+                    error:"Invalid Telegram ID."
                 });
+
             }
 
-            return res.json({
-                success: true,
-                claimed: true,
-                username: user.appUsername,
-                score: user.score
-            });
-        }
+
+            const today =
+                getToday();
+
+            const claimedToday =
+                user.dailyCheckinDate ===
+                today;
 
 
-        return res.status(400).json({
-            success: false,
-            error: "Invalid action."
-        });
+            res.json({
 
-    } catch (error) {
-        console.error("USERNAME CLAIM ERROR:", error);
+                success:true,
 
-        if (error && error.code === 11000) {
-            return res.status(409).json({
-                success: false,
-                error:
-                    "Please choose another username"
-            });
-        }
+                user:{
 
-        res.status(500).json({
-            success: false,
-            error: "Unable to process username task."
-        });
-    }
-});
+                    telegramId:
+                        user.telegramId,
 
+                    username:
+                        user.username,
 
-// =====================================================
-// REFERRAL API
-// =====================================================
+                    appUsername:
+                        user.appUsername,
 
-app.get("/api/referral/:telegramId", async (req, res) => {
-    try {
-        const telegramId =
-            normalizeTelegramId(req.params.telegramId);
+                    score:
+                        user.score,
 
-        const user = await User.findOne({
-            telegramId
-        });
+                    currentTask:
+                        user.currentTask,
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: "User not found."
-            });
-        }
+                    usernameClaimed:
+                        user.usernameClaimed,
 
-        res.json({
-            success: true,
-            referralCount: user.referralCount || 0,
-            referredBy: user.referredBy || ""
-        });
+                    referralCount:
+                        user.referralCount
 
-    } catch (error) {
-        console.error("REFERRAL ERROR:", error);
-
-        res.status(500).json({
-            success: false,
-            error: "Unable to load referral data."
-        });
-    }
-});
-
-
-// =====================================================
-// DAILY CHECK-IN STATUS
-// =====================================================
-
-app.get("/api/daily-check-in/:telegramId", async (req, res) => {
-    try {
-        const telegramId =
-            normalizeTelegramId(req.params.telegramId);
-
-        if (!telegramId) {
-            return res.status(400).json({
-                success: false,
-                error: "Telegram ID is required."
-            });
-        }
-
-        const user = await User.findOne({
-            telegramId
-        });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: "User not found."
-            });
-        }
-
-        const today = getBangladeshDate();
-
-
-        // If pending belongs to an old day,
-        // remove the old pending state.
-        if (
-            user.dailyCheckInPending &&
-            user.dailyCheckInPendingDate !== today
-        ) {
-            user.dailyCheckInPending = false;
-            user.dailyCheckInPendingDate = "";
-            await user.save();
-        }
-
-
-        const claimedToday =
-            user.dailyCheckInDate === today;
-
-        const pending =
-            user.dailyCheckInPending === true &&
-            user.dailyCheckInPendingDate === today;
-
-
-        return res.json({
-            success: true,
-            claimedToday,
-            pending,
-            claimedAt:
-                user.dailyCheckinClaimedAt || null,
-            score: user.score
-        });
-
-    } catch (error) {
-        console.error(
-            "DAILY CHECK-IN STATUS ERROR:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            error: "Unable to load Daily Check-in status."
-        });
-    }
-});
-
-
-// =====================================================
-// DAILY CHECK-IN START
-// =====================================================
-
-app.post("/api/daily-check-in/start", async (req, res) => {
-    try {
-        const telegramId =
-            normalizeTelegramId(req.body.telegramId);
-
-        if (!telegramId) {
-            return res.status(400).json({
-                success: false,
-                error: "Telegram ID is required."
-            });
-        }
-
-        const today = getBangladeshDate();
-
-        const user = await User.findOne({
-            telegramId
-        });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: "User not found."
-            });
-        }
-
-
-        // Already claimed today
-        if (user.dailyCheckInDate === today) {
-            return res.status(409).json({
-                success: false,
-                claimedToday: true,
-                error: "Daily Check-in already completed today."
-            });
-        }
-
-
-        // Pending from an old day
-        if (
-            user.dailyCheckInPending &&
-            user.dailyCheckInPendingDate !== today
-        ) {
-            user.dailyCheckInPending = false;
-            user.dailyCheckInPendingDate = "";
-        }
-
-
-        // Already started today
-        if (
-            user.dailyCheckInPending &&
-            user.dailyCheckInPendingDate === today
-        ) {
-            await user.save();
-
-            return res.json({
-                success: true,
-                pending: true,
-                claimedToday: false
-            });
-        }
-
-
-        // Start today's task
-        user.dailyCheckInPending = true;
-        user.dailyCheckInPendingDate = today;
-
-        await user.save();
-
-
-        return res.json({
-            success: true,
-            pending: true,
-            claimedToday: false
-        });
-
-    } catch (error) {
-        console.error(
-            "DAILY CHECK-IN START ERROR:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            error: "Unable to start Daily Check-in."
-        });
-    }
-});
-
-
-// =====================================================
-// DAILY CHECK-IN CLAIM
-// =====================================================
-
-app.post("/api/daily-check-in/claim", async (req, res) => {
-    try {
-        const telegramId =
-            normalizeTelegramId(req.body.telegramId);
-
-        if (!telegramId) {
-            return res.status(400).json({
-                success: false,
-                error: "Telegram ID is required."
-            });
-        }
-
-        const today = getBangladeshDate();
-
-
-        // Atomic update
-        // This prevents double reward if the user
-        // presses Claim multiple times.
-        const user = await User.findOneAndUpdate(
-            {
-                telegramId,
-
-                dailyCheckInPending: true,
-
-                dailyCheckInPendingDate: today,
-
-                $or: [
-                    {
-                        dailyCheckInDate: {
-                            $exists: false
-                        }
-                    },
-                    {
-                        dailyCheckInDate: ""
-                    },
-                    {
-                        dailyCheckInDate: {
-                            $ne: today
-                        }
-                    }
-                ]
-            },
-            {
-                $set: {
-                    dailyCheckInDate: today,
-                    dailyCheckInPending: false,
-                    dailyCheckInPendingDate: "",
-                    dailyCheckinClaimedAt: new Date()
                 },
 
-                $inc: {
-                    score: 100
-                }
-            },
-            {
-                new: true
-            }
-        );
+                dailyCheckin:{
 
+                    claimedToday,
 
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                error:
-                    "Daily Check-in is not ready to claim."
-            });
-        }
+                    pending:
+                        !!user.dailyCheckinPending
 
-
-        return res.json({
-            success: true,
-            claimed: true,
-            score: user.score,
-            claimedToday: true
-        });
-
-    } catch (error) {
-        console.error(
-            "DAILY CHECK-IN CLAIM ERROR:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            error:
-                "Unable to claim Daily Check-in."
-        });
-    }
-});
-
-
-// =====================================================
-// COMPATIBILITY ROUTES
-// =====================================================
-// এগুলো রাখা হয়েছে যাতে frontend-এ যদি
-// /api/daily-checkin/... থাকে তাহলেও কাজ করে।
-
-app.get("/api/daily-checkin/:telegramId", async (req, res) => {
-    try {
-        const telegramId =
-            normalizeTelegramId(req.params.telegramId);
-
-        const user = await User.findOne({
-            telegramId
-        });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: "User not found."
-            });
-        }
-
-        const today = getBangladeshDate();
-
-        if (
-            user.dailyCheckInPending &&
-            user.dailyCheckInPendingDate !== today
-        ) {
-            user.dailyCheckInPending = false;
-            user.dailyCheckInPendingDate = "";
-            await user.save();
-        }
-
-        res.json({
-            success: true,
-            claimedToday:
-                user.dailyCheckInDate === today,
-            pending:
-                user.dailyCheckInPending === true &&
-                user.dailyCheckInPendingDate === today,
-            claimedAt:
-                user.dailyCheckinClaimedAt || null,
-            score: user.score
-        });
-
-    } catch (error) {
-        console.error(
-            "DAILY CHECK-IN COMPAT STATUS ERROR:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            error: "Server error."
-        });
-    }
-});
-
-
-app.post("/api/daily-checkin/start", async (req, res) => {
-    req.url = "/api/daily-check-in/start";
-
-    try {
-        const telegramId =
-            normalizeTelegramId(req.body.telegramId);
-
-        const today = getBangladeshDate();
-
-        const user = await User.findOne({
-            telegramId
-        });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: "User not found."
-            });
-        }
-
-        if (user.dailyCheckInDate === today) {
-            return res.status(409).json({
-                success: false,
-                claimedToday: true,
-                error:
-                    "Daily Check-in already completed today."
-            });
-        }
-
-        if (
-            user.dailyCheckInPending &&
-            user.dailyCheckInPendingDate === today
-        ) {
-            return res.json({
-                success: true,
-                pending: true
-            });
-        }
-
-        user.dailyCheckInPending = true;
-        user.dailyCheckInPendingDate = today;
-
-        await user.save();
-
-        res.json({
-            success: true,
-            pending: true
-        });
-
-    } catch (error) {
-        console.error(
-            "COMPAT DAILY START ERROR:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            error: "Unable to start Daily Check-in."
-        });
-    }
-});
-
-
-app.post("/api/daily-checkin/claim", async (req, res) => {
-    try {
-        const telegramId =
-            normalizeTelegramId(req.body.telegramId);
-
-        const today = getBangladeshDate();
-
-        const user = await User.findOneAndUpdate(
-            {
-                telegramId,
-                dailyCheckInPending: true,
-                dailyCheckInPendingDate: today,
-                $or: [
-                    {
-                        dailyCheckInDate: {
-                            $exists: false
-                        }
-                    },
-                    {
-                        dailyCheckInDate: ""
-                    },
-                    {
-                        dailyCheckInDate: {
-                            $ne: today
-                        }
-                    }
-                ]
-            },
-            {
-                $set: {
-                    dailyCheckInDate: today,
-                    dailyCheckInPending: false,
-                    dailyCheckInPendingDate: "",
-                    dailyCheckinClaimedAt: new Date()
                 },
-                $inc: {
-                    score: 100
+
+                channelTask:{
+
+                    claimed:
+                        !!user.channelTaskClaimed,
+
+                    pending:
+                        !!user.channelTaskPending,
+
+                    verified:
+                        !!user.channelTaskVerified
+
                 }
-            },
-            {
-                new: true
-            }
-        );
 
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                error:
-                    "Daily Check-in is not ready to claim."
             });
+
+        }catch(error){
+
+            console.error(
+                "GET USER ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Server error."
+
+            });
+
         }
 
-        res.json({
-            success: true,
-            claimed: true,
-            score: user.score,
-            claimedToday: true
-        });
-
-    } catch (error) {
-        console.error(
-            "COMPAT DAILY CLAIM ERROR:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            error: "Unable to claim Daily Check-in."
-        });
     }
-});
+);
 
 
-// =====================================================
-// TELEGRAM WEBHOOK
-// =====================================================
+/* =====================================================
+   UPDATE USER
+===================================================== */
 
-app.post("/telegram/webhook", async (req, res) => {
-    try {
-        const update = req.body;
+app.post(
+    "/api/user/update",
+    async (req,res) => {
 
-        if (!update || !update.message) {
-            return res.sendStatus(200);
+        try{
+
+            const {
+
+                telegramId,
+
+                score,
+
+                currentTask,
+
+                usernameClaimed
+
+            } = req.body;
+
+            if(!telegramId){
+
+                return res.status(400).json({
+
+                    success:false,
+
+                    error:
+                        "Telegram ID required."
+
+                });
+
+            }
+
+            const user =
+                await getOrCreateUser(
+                    String(
+                        telegramId
+                    )
+                );
+
+            if(
+                typeof score ===
+                "number"
+            ){
+
+                user.score =
+                    Math.max(
+                        0,
+                        Math.floor(
+                            score
+                        )
+                    );
+
+            }
+
+            if(
+                typeof currentTask ===
+                "number"
+            ){
+
+                user.currentTask =
+                    Math.max(
+                        0,
+                        Math.min(
+                            10,
+                            Math.floor(
+                                currentTask
+                            )
+                        )
+                    );
+
+            }
+
+            if(
+                typeof usernameClaimed ===
+                "boolean"
+            ){
+
+                user.usernameClaimed =
+                    usernameClaimed;
+
+            }
+
+            await user.save();
+
+            res.json({
+
+                success:true,
+
+                score:
+                    user.score,
+
+                currentTask:
+                    user.currentTask
+
+            });
+
+        }catch(error){
+
+            console.error(
+                "UPDATE USER ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Unable to save user."
+
+            });
+
         }
 
-        const message = update.message;
+    }
+);
 
-        if (!message.from) {
-            return res.sendStatus(200);
+
+/* =====================================================
+   REFERRAL
+===================================================== */
+
+app.get(
+    "/api/referral/:telegramId",
+    async (req,res) => {
+
+        try{
+
+            const telegramId =
+                String(
+                    req.params.telegramId
+                );
+
+            const user =
+                await getOrCreateUser(
+                    telegramId
+                );
+
+            const referralLink =
+                "https://t.me/" +
+                BOT_USERNAME +
+                "?start=" +
+                encodeURIComponent(
+                    telegramId
+                );
+
+            res.json({
+
+                success:true,
+
+                referralLink,
+
+                referralCount:
+                    user.referralCount || 0
+
+            });
+
+        }catch(error){
+
+            console.error(
+                "REFERRAL ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Unable to load referral."
+
+            });
+
         }
 
-        const telegramId =
-            String(message.from.id);
-
-        const telegramUsername =
-            message.from.username || "";
-
-        const text =
-            typeof message.text === "string"
-                ? message.text.trim()
-                : "";
+    }
+);
 
 
-        // =================================================
-        // START COMMAND
-        // =================================================
+/* =====================================================
+   DAILY CHECK-IN STATUS
+===================================================== */
 
-        if (
-            text === "/start" ||
-            text.startsWith("/start ")
-        ) {
+app.get(
+    "/api/daily-checkin/:telegramId",
+    async (req,res) => {
 
-            const parts = text.split(/\s+/);
+        try{
 
-            const startParameter =
-                parts.length > 1
-                    ? parts[1]
-                    : "";
+            const telegramId =
+                String(
+                    req.params.telegramId
+                );
 
+            const user =
+                await getOrCreateUser(
+                    telegramId
+                );
+
+            const today =
+                getToday();
+
+            res.json({
+
+                success:true,
+
+                claimedToday:
+                    user.dailyCheckinDate ===
+                    today,
+
+                pending:
+                    !!user.dailyCheckinPending
+
+            });
+
+        }catch(error){
+
+            console.error(error);
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Unable to load daily check-in."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   DAILY CHECK-IN START
+===================================================== */
+
+app.post(
+    "/api/daily-checkin/start",
+    async (req,res) => {
+
+        try{
+
+            const telegramId =
+                String(
+                    req.body.telegramId || ""
+                );
+
+            if(!telegramId){
+
+                return res.status(400).json({
+
+                    success:false,
+
+                    error:
+                        "Telegram ID required."
+
+                });
+
+            }
+
+            const user =
+                await getOrCreateUser(
+                    telegramId
+                );
+
+            const today =
+                getToday();
+
+            if(
+                user.dailyCheckinDate ===
+                today
+            ){
+
+                return res.status(409).json({
+
+                    success:false,
+
+                    claimedToday:true,
+
+                    error:
+                        "Daily Check-in already completed today."
+
+                });
+
+            }
+
+            user.dailyCheckinPending =
+                true;
+
+            await user.save();
+
+            res.json({
+
+                success:true,
+
+                pending:true
+
+            });
+
+        }catch(error){
+
+            console.error(
+                "DAILY START ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Unable to start Daily Check-in."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   DAILY CHECK-IN CLAIM
+===================================================== */
+
+app.post(
+    "/api/daily-checkin/claim",
+    async (req,res) => {
+
+        try{
+
+            const telegramId =
+                String(
+                    req.body.telegramId || ""
+                );
+
+            const user =
+                await getOrCreateUser(
+                    telegramId
+                );
+
+            const today =
+                getToday();
+
+            if(
+                user.dailyCheckinDate ===
+                today
+            ){
+
+                return res.status(409).json({
+
+                    success:false,
+
+                    claimedToday:true,
+
+                    error:
+                        "Already claimed today."
+
+                });
+
+            }
+
+            if(
+                !user.dailyCheckinPending
+            ){
+
+                return res.status(400).json({
+
+                    success:false,
+
+                    error:
+                        "Daily Check-in was not started."
+
+                });
+
+            }
+
+            user.score +=
+                DAILY_REWARD;
+
+            user.dailyCheckinDate =
+                today;
+
+            user.dailyCheckinPending =
+                false;
+
+            await user.save();
+
+            res.json({
+
+                success:true,
+
+                score:
+                    user.score
+
+            });
+
+        }catch(error){
+
+            console.error(
+                "DAILY CLAIM ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Unable to claim."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   USERNAME CHECK
+===================================================== */
+
+app.post(
+    "/api/username/check",
+    async (req,res) => {
+
+        try{
+
+            let username =
+                String(
+                    req.body.username || ""
+                )
+                .trim()
+                .toLowerCase();
+
+            const telegramId =
+                String(
+                    req.body.telegramId || ""
+                );
+
+            if(
+                !/^[a-z0-9_]{3,20}$/.test(
+                    username
+                )
+            ){
+
+                return res.json({
+
+                    success:true,
+
+                    available:false
+
+                });
+
+            }
+
+            const existing =
+                await User.findOne({
+
+                    appUsername:
+                        username,
+
+                    telegramId:{
+                        $ne:
+                            telegramId
+                    }
+
+                });
+
+            res.json({
+
+                success:true,
+
+                available:
+                    !existing
+
+            });
+
+        }catch(error){
+
+            console.error(
+                "USERNAME CHECK ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                available:false
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   USERNAME RESERVE / CLAIM
+===================================================== */
+
+app.post(
+    "/api/username/claim",
+    async (req,res) => {
+
+        try{
+
+            const {
+
+                telegramId,
+
+                username,
+
+                action
+
+            } = req.body;
+
+            const cleanUsername =
+                String(
+                    username || ""
+                )
+                .replace(/^@/,"")
+                .trim()
+                .toLowerCase();
+
+            if(!telegramId){
+
+                return res.status(400).json({
+
+                    success:false,
+
+                    error:
+                        "Telegram ID required."
+
+                });
+
+            }
+
+            if(
+                !/^[a-z0-9_]{3,20}$/.test(
+                    cleanUsername
+                )
+            ){
+
+                return res.status(400).json({
+
+                    success:false,
+
+                    error:
+                        "Invalid username."
+
+                });
+
+            }
+
+            const user =
+                await getOrCreateUser(
+                    String(
+                        telegramId
+                    )
+                );
+
+
+            /* RESERVE */
+
+            if(
+                action ===
+                "reserve"
+            ){
+
+                if(user.usernameClaimed){
+
+                    return res.status(400).json({
+
+                        success:false,
+
+                        error:
+                            "Username already claimed."
+
+                    });
+
+                }
+
+                const existing =
+                    await User.findOne({
+
+                        appUsername:
+                            cleanUsername,
+
+                        telegramId:{
+                            $ne:
+                                String(
+                                    telegramId
+                                )
+                        }
+
+                    });
+
+                if(existing){
+
+                    return res.status(409).json({
+
+                        success:false,
+
+                        error:
+                            "Username already taken."
+
+                    });
+
+                }
+
+                user.appUsername =
+                    cleanUsername;
+
+                await user.save();
+
+                return res.json({
+
+                    success:true,
+
+                    username:
+                        cleanUsername
+
+                });
+
+            }
+
+
+            /* CLAIM */
+
+            if(
+                action ===
+                "claim"
+            ){
+
+                if(user.usernameClaimed){
+
+                    return res.status(409).json({
+
+                        success:false,
+
+                        error:
+                            "Username already claimed."
+
+                    });
+
+                }
+
+                if(
+                    user.appUsername !==
+                    cleanUsername
+                ){
+
+                    return res.status(400).json({
+
+                        success:false,
+
+                        error:
+                            "Username reservation mismatch."
+
+                    });
+
+                }
+
+                user.usernameClaimed =
+                    true;
+
+                user.score +=
+                    USERNAME_REWARD;
+
+                await user.save();
+
+                return res.json({
+
+                    success:true,
+
+                    username:
+                        user.appUsername,
+
+                    score:
+                        user.score
+
+                });
+
+            }
+
+
+            return res.status(400).json({
+
+                success:false,
+
+                error:
+                    "Invalid action."
+
+            });
+
+        }catch(error){
+
+            console.error(
+                "USERNAME CLAIM ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Unable to process username."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   CHANNEL TASK STATUS
+===================================================== */
+
+app.get(
+    "/api/channel-task/status/:telegramId",
+    async (req,res) => {
+
+        try{
+
+            const telegramId =
+                String(
+                    req.params.telegramId
+                );
+
+            const user =
+                await getOrCreateUser(
+                    telegramId
+                );
+
+            res.json({
+
+                success:true,
+
+                claimed:
+                    !!user.channelTaskClaimed,
+
+                pending:
+                    !!user.channelTaskPending,
+
+                verified:
+                    !!user.channelTaskVerified
+
+            });
+
+        }catch(error){
+
+            console.error(
+                "CHANNEL STATUS ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Unable to load channel task."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   CHANNEL TASK VERIFY
+===================================================== */
+
+app.post(
+    "/api/channel-task/verify",
+    async (req,res) => {
+
+        try{
+
+            const telegramId =
+                String(
+                    req.body.telegramId || ""
+                );
+
+            if(!telegramId){
+
+                return res.status(400).json({
+
+                    success:false,
+
+                    error:
+                        "Telegram ID required."
+
+                });
+
+            }
+
+            const user =
+                await getOrCreateUser(
+                    telegramId
+                );
+
+            if(
+                user.channelTaskClaimed
+            ){
+
+                return res.status(409).json({
+
+                    success:false,
+
+                    claimed:true,
+
+                    error:
+                        "Channel task already completed."
+
+                });
+
+            }
+
+
+            /*
+             * Real Telegram membership check.
+             */
+
+            const member =
+                await isChannelMember(
+                    telegramId
+                );
+
+            if(!member){
+
+                return res.status(403).json({
+
+                    success:false,
+
+                    error:
+                        "You have not joined the KOKO Community channel yet. Please join @tripsgame first."
+
+                });
+
+            }
+
+
+            user.channelTaskVerified =
+                true;
+
+            user.channelTaskPending =
+                true;
+
+            user.channelTaskAdCompleted =
+                false;
+
+            await user.save();
+
+            res.json({
+
+                success:true,
+
+                verified:true,
+
+                pending:true
+
+            });
+
+        }catch(error){
+
+            console.error(
+                "CHANNEL VERIFY ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Unable to verify channel membership."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   CHANNEL TASK CLAIM
+===================================================== */
+
+app.post(
+    "/api/channel-task/claim",
+    async (req,res) => {
+
+        try{
+
+            const telegramId =
+                String(
+                    req.body.telegramId || ""
+                );
+
+            if(!telegramId){
+
+                return res.status(400).json({
+
+                    success:false,
+
+                    error:
+                        "Telegram ID required."
+
+                });
+
+            }
+
+            const user =
+                await getOrCreateUser(
+                    telegramId
+                );
+
+            if(
+                user.channelTaskClaimed
+            ){
+
+                return res.status(409).json({
+
+                    success:false,
+
+                    error:
+                        "Channel reward already claimed."
+
+                });
+
+            }
+
+            if(
+                !user.channelTaskVerified ||
+                !user.channelTaskPending
+            ){
+
+                return res.status(400).json({
+
+                    success:false,
+
+                    error:
+                        "Please verify the channel first."
+
+                });
+
+            }
+
+
+            /*
+             * Check membership AGAIN before
+             * giving the reward.
+             */
+
+            const member =
+                await isChannelMember(
+                    telegramId
+                );
+
+            if(!member){
+
+                user.channelTaskVerified =
+                    false;
+
+                await user.save();
+
+                return res.status(403).json({
+
+                    success:false,
+
+                    error:
+                        "Channel membership could not be verified."
+
+                });
+
+            }
+
+
+            /*
+             * Reward
+             */
+
+            user.score +=
+                CHANNEL_REWARD;
+
+            user.channelTaskClaimed =
+                true;
+
+            user.channelTaskPending =
+                false;
+
+            user.channelTaskVerified =
+                false;
+
+            user.channelTaskAdCompleted =
+                false;
+
+            await user.save();
+
+            res.json({
+
+                success:true,
+
+                score:
+                    user.score,
+
+                reward:
+                    CHANNEL_REWARD
+
+            });
+
+        }catch(error){
+
+            console.error(
+                "CHANNEL CLAIM ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success:false,
+
+                error:
+                    "Unable to claim channel reward."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   TELEGRAM /START
+===================================================== */
+
+app.post(
+    "/telegram-webhook",
+    async (req,res) => {
+
+        try{
+
+            const update =
+                req.body;
+
+            if(
+                !update ||
+                !update.message
+            ){
+
+                return res.sendStatus(200);
+
+            }
+
+            const message =
+                update.message;
+
+            const telegramUser =
+                message.from;
+
+            if(
+                !telegramUser ||
+                !telegramUser.id
+            ){
+
+                return res.sendStatus(200);
+
+            }
+
+            const telegramId =
+                String(
+                    telegramUser.id
+                );
 
             let user =
-                await User.findOne({
+                await getOrCreateUser(
                     telegramId
-                });
+                );
 
+            user.username =
+                telegramUser.username ||
+                "";
 
-            // =============================================
-            // NEW USER
-            // =============================================
+            /*
+             * Handle /start referral
+             */
 
-            if (!user) {
+            const text =
+                String(
+                    message.text || ""
+                );
 
-                let referredBy = "";
+            if(
+                text.startsWith("/start")
+            ){
 
-                if (
-                    startParameter &&
-                    startParameter.startsWith("ref_")
-                ) {
-                    referredBy =
-                        startParameter
-                            .replace("ref_", "")
-                            .trim();
-                }
-
-
-                // Prevent self referral
-                if (
-                    referredBy &&
-                    referredBy === telegramId
-                ) {
-                    referredBy = "";
-                }
-
-
-                user = await User.create({
-                    telegramId,
-                    username: telegramUsername,
-                    referredBy
-                });
-
-
-                // =========================================
-                // INCREMENT REFERRER ONCE
-                // =========================================
-
-                if (referredBy) {
-
-                    await User.findOneAndUpdate(
-                        {
-                            telegramId: referredBy
-                        },
-                        {
-                            $inc: {
-                                referralCount: 1
-                            }
-                        }
+                const parts =
+                    text.split(
+                        /\s+/
                     );
+
+                const referralId =
+                    parts[1]
+                        ? String(
+                            parts[1]
+                        )
+                        : "";
+
+                if(
+                    referralId &&
+                    referralId !==
+                        telegramId &&
+                    !user.referredBy
+                ){
+
+                    const referrer =
+                        await User.findOne({
+                            telegramId:
+                                referralId
+                        });
+
+                    if(referrer){
+
+                        user.referredBy =
+                            referralId;
+
+                        referrer.referralCount =
+                            (referrer.referralCount || 0) +
+                            1;
+
+                        await referrer.save();
+
+                    }
+
                 }
 
-            } else {
-
-                // Existing user:
-                // update Telegram username only
-                if (
-                    telegramUsername &&
-                    user.username !== telegramUsername
-                ) {
-                    user.username =
-                        telegramUsername;
-
-                    await user.save();
-                }
             }
 
+            await user.save();
 
-            // =============================================
-            // OPEN MINI APP BUTTON
-            // =============================================
+            /*
+             * Send Web App button
+             */
 
-            const keyboard = {
-                inline_keyboard: [
-                    [
-                        {
-                            text: "🎮 Open KOKO",
-                            web_app: {
-                                url: WEB_APP_URL
-                            }
-                        }
-                    ]
-                ]
-            };
-
-
-            await sendTelegramMessage(
-                telegramId,
-                "Welcome to KOKO! 🎮\n\nTap the button below to open the Mini App.",
+            await telegramApi(
+                "sendMessage",
                 {
-                    reply_markup: keyboard
+
+                    chat_id:
+                        telegramId,
+
+                    text:
+                        "🎉 Welcome to KOKO Memory Match!\n\nPlay tasks, watch rewarded ads and earn KOKO Coins.",
+
+                    reply_markup:{
+
+                        inline_keyboard:[
+
+                            [
+
+                                {
+
+                                    text:
+                                        "🚀 Open KOKO",
+
+                                    web_app:{
+                                        url:
+                                            WEB_APP_URL
+                                    }
+
+                                }
+
+                            ]
+
+                        ]
+
+                    }
+
                 }
             );
+
+            res.sendStatus(200);
+
+        }catch(error){
+
+            console.error(
+                "TELEGRAM WEBHOOK ERROR:",
+                error
+            );
+
+            res.sendStatus(200);
+
         }
 
-        return res.sendStatus(200);
+    }
+);
 
-    } catch (error) {
-        console.error(
-            "TELEGRAM WEBHOOK ERROR:",
-            error
+
+/* =====================================================
+   SET TELEGRAM WEBHOOK
+===================================================== */
+
+async function setupTelegramWebhook(){
+
+    if(!BOT_TOKEN){
+
+        console.log(
+            "BOT_TOKEN not configured. Telegram webhook skipped."
         );
 
-        return res.sendStatus(200);
+        return;
+
     }
-});
 
-
-// =====================================================
-// WEBHOOK SETUP
-// =====================================================
-
-app.get("/set-webhook", async (req, res) => {
-    try {
-        if (!BOT_TOKEN) {
-            return res.status(500).json({
-                success: false,
-                error: "BOT_TOKEN is missing."
-            });
-        }
+    try{
 
         const webhookUrl =
-            `${WEB_APP_URL}/telegram/webhook`;
+            WEB_APP_URL.replace(
+                /\/$/,
+                ""
+            ) +
+            "/telegram-webhook";
 
         const result =
-            await telegramRequest(
+            await telegramApi(
                 "setWebhook",
                 {
-                    url: webhookUrl
+
+                    url:
+                        webhookUrl
+
                 }
             );
 
-        res.json({
-            success: true,
-            webhookUrl,
-            telegram: result
-        });
-
-    } catch (error) {
-        console.error(
-            "WEBHOOK SET ERROR:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-
-// =====================================================
-// WEBHOOK INFO
-// =====================================================
-
-app.get("/webhook-info", async (req, res) => {
-    try {
-        const result =
-            await telegramRequest(
-                "getWebhookInfo"
-            );
-
-        res.json(result);
-
-    } catch (error) {
-        console.error(
-            "WEBHOOK INFO ERROR:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-
-// =====================================================
-// HEALTH CHECK
-// =====================================================
-
-app.get("/health", (req, res) => {
-    res.json({
-        success: true,
-        status: "KOKO server is running",
-        time: new Date().toISOString()
-    });
-});
-
-
-// =====================================================
-// FALLBACK FOR MINI APP
-// =====================================================
-
-app.get("*", (req, res) => {
-    res.sendFile(
-        path.join(__dirname, "index.html")
-    );
-});
-
-
-// =====================================================
-// MONGODB CONNECTION + SERVER START
-// =====================================================
-
-async function startServer() {
-    try {
-
-        if (!MONGO_URI) {
-            throw new Error(
-                "MONGO_URI environment variable is missing."
-            );
-        }
-
-        await mongoose.connect(MONGO_URI);
-
         console.log(
-            "✅ MongoDB connected successfully."
+            "Telegram webhook result:",
+            result
         );
 
-
-        // Make sure indexes are ready
-        await User.init();
-
-        console.log(
-            "✅ MongoDB indexes initialized."
-        );
-
-
-        app.listen(PORT, () => {
-            console.log(
-                `🚀 KOKO server running on port ${PORT}`
-            );
-
-            console.log(
-                `🌐 Web App: ${WEB_APP_URL}`
-            );
-
-            console.log(
-                "🇧🇩 Daily Check-in timezone: Asia/Dhaka"
-            );
-        });
-
-    } catch (error) {
+    }catch(error){
 
         console.error(
-            "❌ SERVER START ERROR:",
+            "Webhook setup error:",
             error
         );
 
-        process.exit(1);
     }
+
 }
 
 
-startServer();
+/* =====================================================
+   HEALTH
+===================================================== */
+
+app.get(
+    "/health",
+    (req,res) => {
+
+        res.json({
+
+            success:true,
+
+            app:"KOKO",
+
+            channel:
+                CHANNEL_USERNAME,
+
+            status:"online"
+
+        });
+
+    }
+);
+
+
+/* =====================================================
+   START SERVER
+===================================================== */
+
+app.listen(
+    PORT,
+    async () => {
+
+        console.log(
+            "KOKO server running on port " +
+            PORT
+        );
+
+        await setupTelegramWebhook();
+
+    }
+);
