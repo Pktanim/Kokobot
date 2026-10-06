@@ -1393,7 +1393,7 @@ let adsWatchedCount = 0;
 
 let lastAdDate = "";
 
-let currentAdStep = 1; // 1 to 5
+let currentAdStep = 1;
 
 let adTaskPending = false;
 
@@ -3013,7 +3013,7 @@ function renderAdsPageTasks(){
         card.innerHTML = `
             <div class="task-icon">🎬</div>
             <div class="task-info">
-                <strong>Rewarded Ad Task ${i} / 5</strong>
+                <strong>Rewarded Ad Task ${i}</strong>
                 <span>Reward: +100 Coins</span>
             </div>
             <button id="adTaskBtn_${i}" class="${btnClass}" ${isDisabled ? "disabled" : ""}>${btnText}</button>
