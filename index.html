@@ -203,6 +203,41 @@ button{
     cursor:pointer;
 }
 
+.start-btn:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+    background:#1c2d4a;
+    box-shadow:none;
+}
+
+.reset-container{
+    background:#0b162b;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+    padding:18px;
+    text-align:center;
+    margin-top:15px;
+}
+
+.reset-container p{
+    color:#9ba8c1;
+    font-size:13px;
+    margin-bottom:12px;
+}
+
+.ads-unlock-btn{
+    width:100%;
+    border:none;
+    border-radius:14px;
+    padding:14px;
+    font-size:14px;
+    font-weight:800;
+    color:white;
+    background:linear-gradient(135deg,#00b894,#00cec9);
+    cursor:pointer;
+    box-shadow:0 8px 20px rgba(0,206,201,.2);
+}
+
 .section-title{
     font-size:21px;
     margin-bottom:7px;
@@ -273,11 +308,6 @@ button{
     color:#4de59c;
 }
 
-.task-btn.verify{
-    background:#12345a;
-    color:#72cfff;
-}
-
 .task-btn:disabled{
     opacity:.6;
     cursor:not-allowed;
@@ -300,8 +330,6 @@ button{
             rgba(0,168,255,.18)
         );
 }
-
-/* CHANNEL TASK */
 
 .channel-task-card{
     background:
@@ -827,11 +855,31 @@ button{
 
 
     <button
+        id="startMatchingBtn"
         class="start-btn"
         onclick="startMatching()"
     >
         🎯 Start Matching Task
     </button>
+
+
+    <!-- RESET TIMER & AD UNLOCK CONTAINER -->
+
+    <div id="resetContainer" class="reset-container" style="display:none;">
+
+        <p id="resetMessage">
+            All tasks completed! Next round unlocks in: <strong id="timerText">10:00</strong>
+        </p>
+
+        <button
+            id="watchUnlockAdsBtn"
+            class="ads-unlock-btn"
+            onclick="watchUnlockAds()"
+        >
+            🎬 Watch 2 Ads to Unlock Now (0/2)
+        </button>
+
+    </div>
 
 </section>
 
@@ -1353,6 +1401,15 @@ let tgUser = null;
 let usernameAdCompleted = false;
 
 
+/* TIMER & UNLOCK ADS */
+
+let resetEndTime = 0;
+
+let unlockAdsWatchedCount = 0;
+
+let timerInterval = null;
+
+
 /* DAILY */
 
 let dailyCheckinDone = false;
@@ -1719,6 +1776,105 @@ async function showRewardedAd(){
         return false;
 
     }
+
+}
+
+
+/* =========================
+TIMER & UNLOCK ADS LOGIC
+========================= */
+
+function checkTaskResetStatus(){
+
+    const startBtn = document.getElementById("startMatchingBtn");
+    const resetContainer = document.getElementById("resetContainer");
+    const timerText = document.getElementById("timerText");
+    const watchAdsBtn = document.getElementById("watchUnlockAdsBtn");
+
+    if(currentTask >= TOTAL_TASKS){
+
+        if(!resetEndTime){
+            // Set 10 minutes from now (10 * 60 * 1000 ms)
+            resetEndTime = Date.now() + (10 * 60 * 1000);
+            unlockAdsWatchedCount = 0;
+        }
+
+        startBtn.disabled = true;
+        resetContainer.style.display = "block";
+        watchAdsBtn.textContent = `🎬 Watch 2 Ads to Unlock Now (${unlockAdsWatchedCount}/2)`;
+
+        if(timerInterval) clearInterval(timerInterval);
+
+        timerInterval = setInterval(() => {
+
+            const remaining = resetEndTime - Date.now();
+
+            if(remaining <= 0){
+                clearInterval(timerInterval);
+                resetTasksData();
+                return;
+            }
+
+            const mins = Math.floor(remaining / 60000);
+            const secs = Math.floor((remaining % 60000) / 1000);
+            timerText.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+        }, 1000);
+
+    } else {
+        if(timerInterval) clearInterval(timerInterval);
+        resetEndTime = 0;
+        unlockAdsWatchedCount = 0;
+        startBtn.disabled = false;
+        resetContainer.style.display = "none";
+    }
+
+}
+
+
+async function watchUnlockAds(){
+
+    if(taskBusy || unlockAdsWatchedCount >= 2) return;
+
+    taskBusy = true;
+    const watchAdsBtn = document.getElementById("watchUnlockAdsBtn");
+    watchAdsBtn.disabled = true;
+    watchAdsBtn.textContent = "Loading Ad...";
+
+    const adFinished = await showRewardedAd();
+
+    if(!adFinished){
+        taskBusy = false;
+        watchAdsBtn.disabled = false;
+        watchAdsBtn.textContent = `🎬 Watch 2 Ads to Unlock Now (${unlockAdsWatchedCount}/2)`;
+        alert("Ad is not available right now. Please try again.");
+        return;
+    }
+
+    unlockAdsWatchedCount++;
+    taskBusy = false;
+
+    if(unlockAdsWatchedCount >= 2){
+        // Both ads watched! Unlock instantly
+        resetTasksData();
+        alert("Success! Tasks unlocked successfully.");
+    } else {
+        watchAdsBtn.disabled = false;
+        watchAdsBtn.textContent = `🎬 Watch 2 Ads to Unlock Now (${unlockAdsWatchedCount}/2)`;
+        alert("First ad watched! Please watch 1 more ad to unlock instantly.");
+    }
+
+}
+
+
+function resetTasksData(){
+
+    if(timerInterval) clearInterval(timerInterval);
+    currentTask = 0;
+    resetEndTime = 0;
+    unlockAdsWatchedCount = 0;
+    saveData();
+    updateUI();
 
 }
 
@@ -2382,7 +2538,6 @@ async function runUsernameAd(){
         )
         .classList.remove("show");
 
-    // Change button on earn page to Claim instead of auto-claiming
     const userBtn = document.getElementById("usernameTaskBtn");
     if(userBtn){
         userBtn.textContent = "Claim";
@@ -2865,7 +3020,7 @@ function startMatching(){
     ){
 
         alert(
-            "All 10 Memory Tasks are already completed."
+            "All 10 Memory Tasks are completed. Please wait for the timer or watch 2 ads to unlock!"
         );
 
         return;
@@ -3147,10 +3302,11 @@ async function finishTask(){
                     .innerHTML = "";
 
                 message.textContent =
-                    "🏆 All 10 Tasks completed! Total Coins: " +
-                    score;
+                    "🏆 All 10 Tasks completed!";
 
                 taskBusy = false;
+
+                showPage("home");
 
             },
             1200
@@ -3258,6 +3414,11 @@ function updateUI(){
             currentTask +
             "/" +
             TOTAL_TASKS;
+
+
+    /* CHECK TASKS & TIMER STATUS */
+
+    checkTaskResetStatus();
 
 
     /* DAILY */
