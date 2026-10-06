@@ -107,7 +107,7 @@ const UserSchema =
 
             appUsername:{
                 type:String,
-                default:null
+                default:null,
                 unique:true,
                 sparse:true,
                 index:true,
