@@ -110,7 +110,7 @@ const UserSchema =
                 default:null
                 unique:true,
                 sparse:true,
-                index:true
+                index:true,
             },
 
             score:{
