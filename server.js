@@ -21,6 +21,12 @@ const WEB_APP_URL =
 
 const BOT_USERNAME = "koko_mini_bot";
 
+/*
+ * Telegram channel
+ *
+ * KOKO Bot must be ADMIN of this channel
+ * so Telegram Bot API can check membership.
+ */
 const CHANNEL_USERNAME = "@tripsgame";
 
 const CHANNEL_REWARD = 100;
@@ -34,7 +40,9 @@ const USERNAME_REWARD = 100;
    MIDDLEWARE
 ===================================================== */
 
-app.use(express.json());
+app.use(
+    express.json()
+);
 
 app.use(
     express.urlencoded({
@@ -44,7 +52,9 @@ app.use(
 
 app.use(
     express.static(
-        path.join(__dirname)
+        path.join(
+            __dirname
+        )
     )
 );
 
@@ -54,22 +64,24 @@ app.use(
 ===================================================== */
 
 mongoose
-    .connect(MONGO_URI)
-    .then(() => {
-
-        console.log(
-            "MongoDB connected successfully."
-        );
-
-    })
-    .catch(error => {
-
-        console.error(
-            "MongoDB connection error:",
-            error
-        );
-
-    });
+    .connect(
+        MONGO_URI
+    )
+    .then(
+        () => {
+            console.log(
+                "MongoDB connected successfully."
+            );
+        }
+    )
+    .catch(
+        error => {
+            console.error(
+                "MongoDB connection error:",
+                error
+            );
+        }
+    );
 
 
 /* =====================================================
@@ -313,7 +325,7 @@ async function isChannelMember(
                 "getChatMember",
                 {
 
-                    chat_id:"@tripsgame",
+                    chat_id:
                         CHANNEL_USERNAME,
 
                     user_id:
@@ -341,6 +353,18 @@ async function isChannelMember(
         const status =
             result.result &&
             result.result.status;
+
+        /*
+         * Valid channel members:
+         *
+         * creator
+         * administrator
+         * member
+         *
+         * Restricted users can also still
+         * be members when Telegram returns
+         * restricted.
+         */
 
         if(
             status === "creator" ||
@@ -411,15 +435,12 @@ app.get(
             if(!user){
 
                 return res.status(400).json({
-
                     success:false,
-
-                    error:
-                        "Invalid Telegram ID."
-
+                    error:"Invalid Telegram ID."
                 });
 
             }
+
 
             const today =
                 getToday();
@@ -476,10 +497,7 @@ app.get(
                         !!user.channelTaskPending,
 
                     verified:
-                        !!user.channelTaskVerified,
-
-                    adCompleted:
-                        !!user.channelTaskAdCompleted
+                        !!user.channelTaskVerified
 
                 }
 
@@ -1264,10 +1282,7 @@ app.get(
                     !!user.channelTaskPending,
 
                 verified:
-                    !!user.channelTaskVerified,
-
-                adCompleted:
-                    !!user.channelTaskAdCompleted
+                    !!user.channelTaskVerified
 
             });
 
@@ -1294,7 +1309,7 @@ app.get(
 
 
 /* =====================================================
-   CHANNEL TASK VERIFY
+   CHANNEL TASK VERIFY (Updated for Frontend Direct Verify Flow)
 ===================================================== */
 
 app.post(
@@ -1345,7 +1360,7 @@ app.post(
 
 
             /*
-             * Check actual Telegram membership.
+             * Real Telegram membership check.
              */
 
             const member =
@@ -1358,6 +1373,8 @@ app.post(
                 return res.status(403).json({
 
                     success:false,
+
+                    isJoined:false,
 
                     error:
                         "You have not joined the KOKO Community channel yet. Please join @tripsgame first."
@@ -1382,11 +1399,11 @@ app.post(
 
                 success:true,
 
+                isJoined:true,
+
                 verified:true,
 
-                pending:true,
-
-                adCompleted:false
+                pending:true
 
             });
 
@@ -1403,140 +1420,6 @@ app.post(
 
                 error:
                     "Unable to verify channel membership."
-
-            });
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   CHANNEL TASK AD COMPLETE
-===================================================== */
-
-app.post(
-    "/api/channel-task/ad-complete",
-    async (req,res) => {
-
-        try{
-
-            const telegramId =
-                String(
-                    req.body.telegramId || ""
-                );
-
-            if(!telegramId){
-
-                return res.status(400).json({
-
-                    success:false,
-
-                    error:
-                        "Telegram ID required."
-
-                });
-
-            }
-
-            const user =
-                await getOrCreateUser(
-                    telegramId
-                );
-
-            if(
-                user.channelTaskClaimed
-            ){
-
-                return res.status(409).json({
-
-                    success:false,
-
-                    error:
-                        "Channel task already completed."
-
-                });
-
-            }
-
-            if(
-                !user.channelTaskVerified ||
-                !user.channelTaskPending
-            ){
-
-                return res.status(400).json({
-
-                    success:false,
-
-                    error:
-                        "Please verify the channel first."
-
-                });
-
-            }
-
-
-            /*
-             * Check membership again.
-             */
-
-            const member =
-                await isChannelMember(
-                    telegramId
-                );
-
-            if(!member){
-
-                user.channelTaskVerified =
-                    false;
-
-                user.channelTaskPending =
-                    false;
-
-                user.channelTaskAdCompleted =
-                    false;
-
-                await user.save();
-
-                return res.status(403).json({
-
-                    success:false,
-
-                    error:
-                        "Channel membership could not be verified."
-
-                });
-
-            }
-
-
-            user.channelTaskAdCompleted =
-                true;
-
-            await user.save();
-
-            res.json({
-
-                success:true,
-
-                adCompleted:true
-
-            });
-
-        }catch(error){
-
-            console.error(
-                "CHANNEL AD COMPLETE ERROR:",
-                error
-            );
-
-            res.status(500).json({
-
-                success:false,
-
-                error:
-                    "Unable to complete ad step."
 
             });
 
@@ -1596,33 +1479,8 @@ app.post(
 
 
             /*
-             * Must pass all 3 steps:
-             *
-             * Verified
-             * Pending
-             * Ad completed
-             */
-
-            if(
-                !user.channelTaskVerified ||
-                !user.channelTaskPending ||
-                !user.channelTaskAdCompleted
-            ){
-
-                return res.status(400).json({
-
-                    success:false,
-
-                    error:
-                        "Please complete verification and watch the ad first."
-
-                });
-
-            }
-
-
-            /*
-             * Check membership AGAIN.
+             * Check membership AGAIN before
+             * giving the reward.
              */
 
             const member =
@@ -1633,12 +1491,6 @@ app.post(
             if(!member){
 
                 user.channelTaskVerified =
-                    false;
-
-                user.channelTaskPending =
-                    false;
-
-                user.channelTaskAdCompleted =
                     false;
 
                 await user.save();
@@ -1656,7 +1508,7 @@ app.post(
 
 
             /*
-             * GIVE REWARD
+             * Reward
              */
 
             user.score +=
@@ -1761,9 +1613,8 @@ app.post(
                 telegramUser.username ||
                 "";
 
-
             /*
-             * HANDLE /START REFERRAL
+             * Handle /start referral
              */
 
             const text =
@@ -1796,10 +1647,8 @@ app.post(
 
                     const referrer =
                         await User.findOne({
-
                             telegramId:
                                 referralId
-
                         });
 
                     if(referrer){
@@ -1821,9 +1670,8 @@ app.post(
 
             await user.save();
 
-
             /*
-             * SEND WEB APP BUTTON
+             * Send Web App button
              */
 
             await telegramApi(
