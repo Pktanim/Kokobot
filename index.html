@@ -1882,7 +1882,10 @@ async function startDailyCheckin(){
         dailyCheckinAdCompleted = true;
         taskBusy = false;
 
-        await claimDailyCheckin();
+        btn.disabled = false;
+        btn.textContent = "Claim";
+        btn.classList.add("claim");
+        btn.onclick = claimDailyCheckin;
 
     }catch(error){
 
@@ -2379,7 +2382,14 @@ async function runUsernameAd(){
         )
         .classList.remove("show");
 
-    await claimUsername();
+    // Change button on earn page to Claim instead of auto-claiming
+    const userBtn = document.getElementById("usernameTaskBtn");
+    if(userBtn){
+        userBtn.textContent = "Claim";
+        userBtn.classList.add("claim");
+        userBtn.disabled = false;
+        userBtn.onclick = claimUsername;
+    }
 
 }
 
@@ -2397,6 +2407,12 @@ async function claimUsername(){
     }
 
     taskBusy = true;
+
+    const userBtn = document.getElementById("usernameTaskBtn");
+    if(userBtn) {
+        userBtn.disabled = true;
+        userBtn.textContent = "Claiming...";
+    }
 
     try{
 
@@ -2435,6 +2451,10 @@ async function claimUsername(){
         ){
 
             taskBusy = false;
+            if(userBtn) {
+                userBtn.disabled = false;
+                userBtn.textContent = "Claim";
+            }
 
             alert(
                 data.error ||
@@ -2476,6 +2496,10 @@ async function claimUsername(){
         console.error(error);
 
         taskBusy = false;
+        if(userBtn) {
+            userBtn.disabled = false;
+            userBtn.textContent = "Claim";
+        }
 
         alert(
             "Something went wrong."
@@ -3261,6 +3285,16 @@ function updateUI(){
 
             dailyBtn.onclick = null;
 
+        }else if(dailyCheckinPending){
+
+            dailyBtn.textContent = "Claim";
+
+            dailyBtn.disabled = false;
+
+            dailyBtn.classList.add("claim");
+
+            dailyBtn.onclick = claimDailyCheckin;
+
         }else{
 
             dailyBtn.textContent =
@@ -3300,6 +3334,16 @@ function updateUI(){
             userBtn.disabled = true;
 
             userBtn.onclick = null;
+
+        }else if(usernameReserved && usernameAdCompleted){
+
+            userBtn.textContent = "Claim";
+
+            userBtn.disabled = false;
+
+            userBtn.classList.add("claim");
+
+            userBtn.onclick = claimUsername;
 
         }else{
 
