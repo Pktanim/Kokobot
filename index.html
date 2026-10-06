@@ -1882,7 +1882,6 @@ async function startDailyCheckin(){
         dailyCheckinAdCompleted = true;
         taskBusy = false;
 
-        // সরাসরি ক্লাইম ফাংশন কল করে দেওয়া
         await claimDailyCheckin();
 
     }catch(error){
@@ -2665,11 +2664,13 @@ async function verifyChannelTask(){
         }
 
         channelAdCompleted = true;
-taskBusy = false;
+        taskBusy = false;
 
-btn.disabled = false;
-btn.textContent = "Claim";
-btn.onclick = claimChannelTask;
+        btn.disabled = false;
+        btn.textContent = "Claim";
+        btn.onclick = claimChannelTask;
+
+    }catch(error){
 
         console.error(
             "Channel verification error:",
