@@ -394,12 +394,19 @@ async function isChannelMember(
 
 
 /* =====================================================
-   HOME
+   HOME (Updated for Cron-job ping & Frontend UI)
 ===================================================== */
 
 app.get(
     "/",
     (req,res) => {
+
+        // যদি ব্রাউজার থেকে রিকোয়েস্ট আসে তাহলে index.html দেখাবে, 
+        // আর ক্রন-জব বা পিং বট থেকে আসলে সফল স্ট্যাটাস রিটার্ন করবে যাতে 404 না আসে।
+        const userAgent = req.headers['user-agent'] || '';
+        if (userAgent.includes('cron-job.org') || userAgent.includes('UptimeRobot')) {
+            return res.status(200).send("KOKO Server is Alive!");
+        }
 
         res.sendFile(
             path.join(
