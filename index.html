@@ -2645,8 +2645,6 @@ async function verifyChannelTask(){
 
         channelVerified = true;
 
-        btn.textContent = "Loading Ad...";
-
         const adFinished =
             await showRewardedAd();
 
@@ -2667,12 +2665,11 @@ async function verifyChannelTask(){
         }
 
         channelAdCompleted = true;
-        taskBusy = false;
-        
-        // অ্যাড দেখা শেষ হওয়া মাত্রই সরাসরি ক্লেইম ট্রিগার করা
-        await claimChannelTask();
+taskBusy = false;
 
-    }catch(error){
+btn.disabled = false;
+btn.textContent = "Claim";
+btn.onclick = claimChannelTask;
 
         console.error(
             "Channel verification error:",
