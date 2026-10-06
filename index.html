@@ -1793,7 +1793,7 @@ async function startDailyCheckin(){
     btn.disabled = true;
 
     btn.textContent =
-        "Checking...";
+        "Loading...";
 
     try{
 
@@ -1860,9 +1860,6 @@ async function startDailyCheckin(){
 
         dailyCheckinPending = true;
 
-        btn.textContent =
-            "Ad 15s...";
-
         const adFinished =
             await showRewardedAd();
 
@@ -1883,10 +1880,10 @@ async function startDailyCheckin(){
         }
 
         dailyCheckinAdCompleted = true;
-
         taskBusy = false;
 
-        updateUI();
+        // সরাসরি ক্লাইম ফাংশন কল করে দেওয়া
+        await claimDailyCheckin();
 
     }catch(error){
 
@@ -2345,7 +2342,7 @@ async function runUsernameAd(){
     cancelBtn.disabled = true;
 
     setBtn.textContent =
-        "Ad 15s...";
+        "Loading Ad...";
 
     const adFinished =
         await showRewardedAd();
@@ -2383,7 +2380,7 @@ async function runUsernameAd(){
         )
         .classList.remove("show");
 
-    updateUI();
+    await claimUsername();
 
 }
 
@@ -2401,16 +2398,6 @@ async function claimUsername(){
     }
 
     taskBusy = true;
-
-    const userBtn =
-        document.getElementById(
-            "usernameTaskBtn"
-        );
-
-    userBtn.disabled = true;
-
-    userBtn.textContent =
-        "Claiming...";
 
     try{
 
@@ -2449,10 +2436,6 @@ async function claimUsername(){
         ){
 
             taskBusy = false;
-
-            userBtn.disabled = false;
-
-            userBtn.textContent = "Claim";
 
             alert(
                 data.error ||
@@ -2494,10 +2477,6 @@ async function claimUsername(){
         console.error(error);
 
         taskBusy = false;
-
-        userBtn.disabled = false;
-
-        userBtn.textContent = "Claim";
 
         alert(
             "Something went wrong."
@@ -2666,7 +2645,8 @@ async function verifyChannelTask(){
 
         channelVerified = true;
 
-        // সরাসরি অ্যাড দেখানোর পর কোনো রকম মাঝখানের "Ad 15s..." স্টেট ছাড়া সোজা Claim স্ট্যাটাসে চলে যাওয়ার জন্য:
+        btn.textContent = "Loading Ad...";
+
         const adFinished =
             await showRewardedAd();
 
@@ -2689,7 +2669,7 @@ async function verifyChannelTask(){
         channelAdCompleted = true;
         taskBusy = false;
         
-        // অ্যাড দেখা শেষ হওয়া মাত্রই সরাসরি ক্লেইম ট্রিগার বা ক্লাইম্ব অপশন এনে দেওয়া
+        // অ্যাড দেখা শেষ হওয়া মাত্রই সরাসরি ক্লেইম ট্রিগার করা
         await claimChannelTask();
 
     }catch(error){
@@ -3283,21 +3263,6 @@ function updateUI(){
 
             dailyBtn.onclick = null;
 
-        }else if(
-            dailyCheckinPending &&
-            dailyCheckinAdCompleted
-        ){
-
-            dailyBtn.textContent =
-                "Claim";
-
-            dailyBtn.classList.add("claim");
-
-            dailyBtn.disabled = false;
-
-            dailyBtn.onclick =
-                claimDailyCheckin;
-
         }else{
 
             dailyBtn.textContent =
@@ -3337,21 +3302,6 @@ function updateUI(){
             userBtn.disabled = true;
 
             userBtn.onclick = null;
-
-        }else if(
-            usernameReserved &&
-            usernameAdCompleted
-        ){
-
-            userBtn.textContent =
-                "Claim";
-
-            userBtn.classList.add("claim");
-
-            userBtn.disabled = false;
-
-            userBtn.onclick =
-                claimUsername;
 
         }else{
 
