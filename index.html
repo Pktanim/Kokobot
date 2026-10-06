@@ -2509,7 +2509,7 @@ async function claimUsername(){
 
 
 /* =========================
-CHANNEL TASK (Updated Flow)
+CHANNEL TASK
 ========================= */
 
 function openChannel(){
@@ -2593,23 +2593,18 @@ async function loadChannelTaskStatus(){
 }
 
 
-// যখন ইউজার প্রথম "Task" বাটনে ক্লিক করবে
 function handleChannelTaskClick(){
 
     if(channelTaskDone || taskBusy) return;
 
-    // প্রথমে টেলিগ্রাম চ্যানেলে রিডাইরেক্ট করবে
     openChannel();
 
-    // ইউজার চ্যানেল ঘুরে আসার পর যেন অ্যাপে ফিরে এসে Verify করতে পারে, 
-    // তাই স্ট্যাটাস পরিবর্তন করে Verify মোডে নিয়ে যাওয়া হচ্ছে
     channelVerified = false; 
     channelAdCompleted = false;
     updateUI();
 }
 
 
-// ইউজার চ্যানেলে ঘুরে এসে যখন Verify এ ক্লিক করবে
 async function verifyChannelTask(){
 
     if(taskBusy || channelTaskDone) return;
@@ -2624,7 +2619,6 @@ async function verifyChannelTask(){
 
     try{
 
-        // ব্যাকএন্ডে রিকোয়েস্ট পাঠানো হবে ইউজার চ্যানেলে জয়েন করেছে কি না তা চেক করার জন্য
         const response =
             await fetch(
                 "/api/channel-task/verify",
@@ -2649,7 +2643,6 @@ async function verifyChannelTask(){
         const data =
             await response.json();
 
-        // যদি ইউজার ঠিকঠাক মতো জয়েন না করে থাকে
         if(
             !response.ok ||
             !data.success ||
@@ -2660,7 +2653,7 @@ async function verifyChannelTask(){
 
             btn.disabled = false;
 
-            btn.textContent = "Task"; // আবার আগের মতো টাস্ক বা জয়েন মোডে ফিরিয়ে দিবে
+            btn.textContent = "Task";
 
             alert(
                 data.error ||
@@ -2671,11 +2664,9 @@ async function verifyChannelTask(){
 
         }
 
-        // ইউজার সফলভাবে জয়েন করে থাকলে এখন ১৫ সেকেন্ডের অ্যাড দেখাবে
         channelVerified = true;
 
-        btn.textContent = "Ad 15s...";
-
+        // সরাসরি অ্যাড দেখানোর পর কোনো রকম মাঝখানের "Ad 15s..." স্টেট ছাড়া সোজা Claim স্ট্যাটাসে চলে যাওয়ার জন্য:
         const adFinished =
             await showRewardedAd();
 
@@ -2696,10 +2687,10 @@ async function verifyChannelTask(){
         }
 
         channelAdCompleted = true;
-
         taskBusy = false;
-
-        updateUI(); // অ্যাড শেষ হলে বাটনটি অটোমেটিক 'Claim' এ রূপান্তরিত হবে
+        
+        // অ্যাড দেখা শেষ হওয়া মাত্রই সরাসরি ক্লেইম ট্রিগার বা ক্লাইম্ব অপশন এনে দেওয়া
+        await claimChannelTask();
 
     }catch(error){
 
@@ -3244,7 +3235,7 @@ function showPage(page){
 
 
 /* =========================
-UPDATE UI (Channel Task Button States)
+UPDATE UI
 ========================= */
 
 function updateUI(){
@@ -3377,7 +3368,7 @@ function updateUI(){
     }
 
 
-    /* CHANNEL TASK (Single button flow inside the card) */
+    /* CHANNEL TASK */
 
     const channelBtn =
         document.getElementById(
@@ -3402,43 +3393,24 @@ function updateUI(){
 
             channelBtn.onclick = null;
 
-        }else if(
-            channelVerified &&
-            channelAdCompleted
-        ){
+        } else {
 
-            // সব ঠিক থাকলে ক্লাইম অপশন দেখাবে
             channelBtn.textContent =
-                "Claim";
-
-            channelBtn.classList.add("claim");
+                channelVerified ? "Claim" : "Task";
 
             channelBtn.disabled = false;
 
-            channelBtn.onclick =
-                claimChannelTask;
-
-        }else{
-
-            // ইউজার যখন প্রথম দেখবে বা চ্যানেল ঘুরে এসে ভেরিফাই করতে চাইবে
-            // যদি চ্যানেল জয়েন করা না থাকে বা কেবল জয়েন করে ফেরে
-            channelBtn.textContent =
-                channelVerified ? "Verify" : "Task";
-
-            channelBtn.disabled = false;
-
-            channelBtn.onclick = channelVerified ? verifyChannelTask : handleChannelTaskClick;
-            
-            // সুবিধার্থে ইউজার অ্যাপে ফিরে আসার পর যাতে এক ক্লিকেই ভেরিফাই করতে পারে
-            // তাই একবার ক্লিক করার পর পরের ধাপে বাটনটি 'Verify' এ রূপান্তর করতে পারি:
             if(!channelVerified && channelBtn.textContent === "Task") {
-                // ইউজার চ্যানেল লিংকে ক্লিক করার পর বাটনটি ভেরিফাই মোডে নিয়ে যাওয়ার ছোট হ্যান্ডলার
                 channelBtn.onclick = function() {
                     openChannel();
                     channelBtn.textContent = "Verify";
                     channelBtn.onclick = verifyChannelTask;
                 };
+            } else {
+                channelBtn.onclick = verifyChannelTask;
+                channelBtn.classList.add("claim");
             }
+
         }
 
     }
