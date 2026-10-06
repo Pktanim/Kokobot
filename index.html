@@ -438,36 +438,6 @@ button{
     color:#72cfff;
 }
 
-.ad-box{
-    background:linear-gradient(145deg,#0c1b36,#091326);
-    border:1px solid rgba(255,255,255,.07);
-    border-radius:22px;
-    padding:25px 20px;
-    text-align:center;
-}
-
-.ad-icon{
-    width:70px;
-    height:70px;
-    border-radius:22px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    margin:0 auto 15px;
-    font-size:32px;
-    background:#15284c;
-}
-
-.ad-box h2{
-    margin-bottom:8px;
-}
-
-.ad-box p{
-    color:#7f8ca4;
-    line-height:1.6;
-    font-size:13px;
-}
-
 .wallet-card{
     background:linear-gradient(135deg,#111f3d,#09162b);
     border-radius:23px;
@@ -1050,21 +1020,8 @@ button{
         Watch rewarded ads and earn.
     </p>
 
-    <div class="ad-box">
-
-        <div class="ad-icon">
-            🎬
-        </div>
-
-        <h2>
-            Rewarded Interstitial
-        </h2>
-
-        <p>
-            Complete tasks and watch rewarded ads
-            before claiming your KOKO Coins.
-        </p>
-
+    <div id="adsListContainer">
+        <!-- Dynamic 5 Ads Tasks will be generated here -->
     </div>
 
 </section>
@@ -1428,6 +1385,19 @@ let channelVerified = false;
 let channelPending = false;
 
 let channelAdCompleted = false;
+
+
+/* REWARDED ADS (5 Daily Ads) */
+
+let adsWatchedCount = 0;
+
+let lastAdDate = "";
+
+let currentAdStep = 1; // 1 to 5
+
+let adTaskPending = false;
+
+let adTaskWatched = false;
 
 
 /* Telegram fallback */
@@ -1794,7 +1764,6 @@ function checkTaskResetStatus(){
     if(currentTask >= TOTAL_TASKS){
 
         if(!resetEndTime){
-            // Set 10 minutes from now (10 * 60 * 1000 ms)
             resetEndTime = Date.now() + (10 * 60 * 1000);
             unlockAdsWatchedCount = 0;
         }
@@ -1855,7 +1824,6 @@ async function watchUnlockAds(){
     taskBusy = false;
 
     if(unlockAdsWatchedCount >= 2){
-        // Both ads watched! Unlock instantly
         resetTasksData();
         alert("Success! Tasks unlocked successfully.");
     } else {
@@ -2986,6 +2954,143 @@ async function claimChannelTask(){
 
 
 /* =========================
+REWARDED ADS (5 Daily Ads Tasks)
+========================= */
+
+function checkDailyAdsReset(){
+    const today = new Date().toDateString();
+    let savedDate = localStorage.getItem("koko_ad_date") || "";
+    if(savedDate !== today){
+        localStorage.setItem("koko_ad_date", today);
+        localStorage.setItem("koko_ads_watched", "0");
+        adsWatchedCount = 0;
+    } else {
+        adsWatchedCount = parseInt(localStorage.getItem("koko_ads_watched") || "0");
+    }
+}
+
+
+function renderAdsPageTasks(){
+    checkDailyAdsReset();
+    const container = document.getElementById("adsListContainer");
+    if(!container) return;
+    
+    container.innerHTML = "";
+
+    for(let i = 1; i <= 5; i++){
+        let isDone = i <= adsWatchedCount;
+        let isCurrent = i === (adsWatchedCount + 1);
+
+        let btnText = "Task";
+        let btnClass = "task-btn";
+        let isDisabled = true;
+        let onClickFn = null;
+
+        if(isDone){
+            btnText = "✓ Done";
+            btnClass = "task-btn done";
+            isDisabled = true;
+        } else if(isCurrent){
+            if(adTaskPending && adTaskWatched){
+                btnText = "Claim";
+                btnClass = "task-btn claim";
+                isDisabled = false;
+                onClickFn = () => claimDailyAdTask(i);
+            } else {
+                btnText = "Task";
+                btnClass = "task-btn";
+                isDisabled = false;
+                onClickFn = () => startDailyAdTask(i);
+            }
+        } else {
+            btnText = "Locked";
+            btnClass = "task-btn";
+            isDisabled = true;
+        }
+
+        let card = document.createElement("div");
+        card.className = "task-card daily-task-card";
+        card.innerHTML = `
+            <div class="task-icon">🎬</div>
+            <div class="task-info">
+                <strong>Rewarded Ad Task ${i} / 5</strong>
+                <span>Reward: +100 Coins</span>
+            </div>
+            <button id="adTaskBtn_${i}" class="${btnClass}" ${isDisabled ? "disabled" : ""}>${btnText}</button>
+        `;
+
+        if(onClickFn && !isDisabled){
+            card.querySelector("button").onclick = onClickFn;
+        }
+
+        container.appendChild(card);
+    }
+}
+
+
+async function startDailyAdTask(step){
+    if(taskBusy) return;
+    taskBusy = true;
+
+    const btn = document.getElementById(`adTaskBtn_${step}`);
+    if(btn){
+        btn.disabled = true;
+        btn.textContent = "Loading Ad...";
+    }
+
+    const adFinished = await showRewardedAd();
+
+    if(!adFinished){
+        taskBusy = false;
+        if(btn){
+            btn.disabled = false;
+            btn.textContent = "Task";
+        }
+        alert("Ad is not available right now. Please try again.");
+        return;
+    }
+
+    adTaskPending = true;
+    adTaskWatched = true;
+    taskBusy = false;
+
+    if(btn){
+        btn.disabled = false;
+        btn.textContent = "Claim";
+        btn.className = "task-btn claim";
+        btn.onclick = () => claimDailyAdTask(step);
+    }
+}
+
+
+async function claimDailyAdTask(step){
+    if(taskBusy || !adTaskPending || !adTaskWatched) return;
+    taskBusy = true;
+
+    const btn = document.getElementById(`adTaskBtn_${step}`);
+    if(btn){
+        btn.disabled = true;
+        btn.textContent = "Claiming...";
+    }
+
+    score += 100;
+    adsWatchedCount = step;
+    localStorage.setItem("koko_ads_watched", adsWatchedCount);
+
+    adTaskPending = false;
+    adTaskWatched = false;
+
+    await saveData();
+    taskBusy = false;
+
+    renderAdsPageTasks();
+    updateUI();
+
+    alert("Success! +100 Coins added.");
+}
+
+
+/* =========================
 MEMORY MATCH
 ========================= */
 
@@ -3387,6 +3492,10 @@ function showPage(page){
 
         nav.classList.add("active");
 
+    }
+
+    if(page === "ads"){
+        renderAdsPageTasks();
     }
 
 }
